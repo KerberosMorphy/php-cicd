@@ -2,9 +2,9 @@ name: PHP-CICD
 
 on:
     push:
-    branches:
-        - master
-        - production
+        branches:
+            - master
+            - production
 
 env:
     PHP_IMAGE: $GITHUB_REPOSITORY/gh-php

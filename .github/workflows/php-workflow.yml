@@ -25,7 +25,7 @@ jobs:
                 username: ${{ github.actor }}
                 password: ${{ github.token }}
                 registry: docker.pkg.github.com
-                cache_froms: $PHP_IMAGE:latest
+                cache_froms: ${{ env.PHP_IMAGE }}:latest
                 dockerfile: docker/Dockerfile
                 repository: ${{ env.PHP_IMAGE }}
                 tag_with_sha: true
@@ -37,10 +37,10 @@ jobs:
                 username: ${{ github.actor }}
                 password: $GITHUB_TOKEN
                 registry: docker.pkg.github.com
-                cache_froms: $PHP_IMAGE:latest,$PHP_TEST_IMAGE:latest
+                cache_froms: ${{ env.PHP_IMAGE }}:latest,${{ env.PHP_TEST_IMAGE }}:latest
                 dockerfile: docker/Test.Dockerfile
                 repository: ${{ env.PHP_TEST_IMAGE }}
-                build_args: base_image=$PHP_IMAGE:latest
+                build_args: base_image=${{ env.PHP_IMAGE }}:latest
                 tag_with_sha: true
                 tags: latest
             - name: Build Failure Handler
@@ -51,7 +51,7 @@ jobs:
     php_test:
         name: Tests
         runs-on: ubuntu-latest
-        container: $PHP_TEST_IMAGE:latest
+        container: ${{ env.PHP_TEST_IMAGE }}:latest
         needs: ["php_build"]
         steps:
             - uses: actions/checkout@v2

@@ -16,15 +16,22 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
+            - name: Get docker images exist
+              id: get_docker_images_exist
+              run: |
+                echo '{"experimental": "enabled"}' > ~/.docker/config.json
+                echo ${{github.token}} | docker docker.pkg.github.com login --username ${{github.actor}} --password-stdin
+                echo "##[set-output name=php_image_exist;]$(docker manifest inspect ${{ env.PHP_IMAGE }}:latest > /dev/null ; echo $?)""
+                echo "##[set-output name=php_test_image_exist;]$(docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest > /dev/null ; echo $?)""
+            - run: |
+                echo steps.get_docker_images_exist.outputs.php_image_exist
+                echo steps.get_docker_images_exist.outputs.php_test_image_exist
             - name: Get file changes
               id: get_file_changes
               uses: dorner/file-changes-action@v1.2.0
               with:
                 githubToken: ${{ github.token }}
                 plaintext: true
-            - name: Show file
-              run: |
-                echo Changed files: ${{ steps.get_file_changes.outputs.files }}
             - name: Publish PHP Image
               if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
               uses: docker/build-push-action@v1.1.0
@@ -39,6 +46,7 @@ jobs:
                 tag_with_sha: true
                 tags: latest
             - name: Publish PHP Test Image
+              if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile')
               uses: docker/build-push-action@v1.1.0
               with:
                 name: ${{ env.PHP_TEST_IMAGE }}

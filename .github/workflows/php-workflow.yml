@@ -17,17 +17,17 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - run: echo ${{ PHP_IMAGE }}
+            - run: echo ${{ env.PHP_IMAGE }}
             - name: Publish PHP Image
               uses: docker/build-push-action@v1.1.0
               with:
-                name: ${{ PHP_IMAGE }}
+                name: ${{ env.PHP_IMAGE }}
                 username: ${{ github.actor }}
                 password: ${{ github.token }}
                 registry: docker.pkg.github.com
                 cache_froms: $PHP_IMAGE:latest
                 dockerfile: docker/Dockerfile
-                repository: ${{ PHP_IMAGE }}
+                repository: ${{ env.PHP_IMAGE }}
                 tag_with_sha: true
                 tags: latest
             - name: Publish PHP Test Image

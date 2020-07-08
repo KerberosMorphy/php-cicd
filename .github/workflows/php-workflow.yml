@@ -25,8 +25,8 @@ jobs:
             - name: Show file
               run: |
                 echo Changed files: ${{ steps.get_file_changes.outputs.files }}
-            - run:  git diff-tree --no-commit-id --name-only -r ${{ github.sha }}
             - name: Publish PHP Image
+              if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
               uses: docker/build-push-action@v1.1.0
               with:
                 name: ${{ env.PHP_IMAGE }}

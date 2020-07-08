@@ -16,6 +16,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
+            - run: git diff-tree --no-commit-id --name-only -r ${{ github.sha }}
             - name: Publish PHP Image
               uses: docker/build-push-action@v1.1.0
               with:
@@ -49,7 +50,7 @@ jobs:
     php_test:
         name: Tests
         runs-on: ubuntu-latest
-        container: $PHP_TEST_IMAGE:latest
+        container: docker.pkg.github.com/${{env.PHP_TEST_IMAGE}}:latest
         needs: ["php_build"]
         steps:
             - uses: actions/checkout@v2

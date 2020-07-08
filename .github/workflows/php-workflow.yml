@@ -18,6 +18,8 @@ jobs:
             - uses: actions/checkout@v2
             - name: Get docker images exist
               id: get_docker_images_exist
+              env:
+                DOCKER_CLI_EXPERIMENTAL: enabled
               run: |
                 echo '{"experimental": true}' | sudo tee -a /etc/docker/daemon.json
                 echo ${{github.token}} | docker login docker.pkg.github.com --username ${{github.actor}} --password-stdin

@@ -7,8 +7,8 @@ on:
             - production
 
 env:
-    PHP_IMAGE: $GITHUB_REPOSITORY/gh-php
-    PHP_TEST_IMAGE: $GITHUB_REPOSITORY/gh-php-test
+    PHP_IMAGE: ${{ github.repository }}/gh-php
+    PHP_TEST_IMAGE: ${{ github.repository }}/gh-php-test
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - run: echo "${{ github.repository }} ${{ github.actor }}"
+            - run: echo $PHP_IMAGE
             - name: Publish PHP Image
               uses: docker/build-push-action@v1.1.0
               with:
@@ -27,7 +27,7 @@ jobs:
                 registry: docker.pkg.github.com
                 cache_froms: $PHP_IMAGE:latest
                 dockerfile: docker/Dockerfile
-                repository: ${{ github.repository }}
+                repository: $PHP_IMAGE
                 tag_with_sha: true
                 tags: latest
             - name: Publish PHP Test Image
@@ -39,7 +39,7 @@ jobs:
                 registry: docker.pkg.github.com
                 cache_froms: $PHP_IMAGE:latest,$PHP_TEST_IMAGE:latest
                 dockerfile: docker/Test.Dockerfile
-                repository: ${{ github.repository }}
+                repository: $PHP_TEST_IMAGE
                 build_args: base_image=$PHP_IMAGE:latest
                 tag_with_sha: true
                 tags: latest

@@ -64,7 +64,7 @@ jobs:
       - name: Functional Test
           run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
       - name: Test Failure Handler
-          if: failure()
+        #   if: failure()
           run: |
             chmod +x ./scripts/on_test_failure.sh
             sh ./scripts/on_test_failure.sh

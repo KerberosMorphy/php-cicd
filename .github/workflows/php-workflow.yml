@@ -1,0 +1,87 @@
+name: PHP-CICD
+
+on:
+  push:
+    branches:
+      - master
+      - production
+
+env:
+  PHP_IMAGE: $GITHUB_REPOSITORY/gh-php
+  PHP_TEST_IMAGE: $GITHUB_REPOSITORY/gh-php-test
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  php:build:
+    name: Builds
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish PHP Image
+        uses: docker/build-push-action@v1.1.0
+        with:
+            name: $PHP_IMAGE
+            username: ${{ github.actor }}
+            password: $GITHUB_TOKEN
+            registry: docker.pkg.github.com
+            cache_froms: $PHP_IMAGE:latest
+            dockerfile: docker/Dockerfile
+            repository: $GITHUB_REPOSITORY
+            tag_with_sha: true
+            tags: latest
+      - name: Publish PHP Test Image
+        uses: docker/build-push-action@v1.1.0
+        with:
+            name: $PHP_TEST_IMAGE
+            username: ${{ github.actor }}
+            password: $GITHUB_TOKEN
+            registry: docker.pkg.github.com
+            cache_froms: $PHP_IMAGE:latest,$PHP_TEST_IMAGE:latest
+            dockerfile: docker/Test.Dockerfile
+            repository: $GITHUB_REPOSITORY
+            build_args: base_image=$PHP_IMAGE:latest
+            tag_with_sha: true
+            tags: latest
+      - name: Build Failure Handler
+          workingdir: scripts
+          if: ${{ failure() }}
+          run: |
+            chmod +x ./on_build_failure.sh
+            sh ./on_build_failure.sh
+  php:test:
+    name: Tests
+    runs-on: ubuntu-latest
+    container: $PHP_TEST_IMAGE:latest
+    needs:
+        php:build:
+            result: [success, cancelled]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Unit Test
+          run: |
+            phpunit --bootstrap ./src/Calculator.php ./tests/CalculatorTest.php
+            phpunit --bootstrap ./src/Email.php ./tests/EmailTest.php
+      - name: Integration Test
+          run: phpunit --bootstrap ./src/Music.php ./tests/MusicIntegrationTest.php
+      - name: Functional Test
+          run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
+      - name: Test Failure Handler
+          if: ${{ failure() }}
+          run: |
+            chmod +x ./on_test_failure.sh
+            sh ./on_test_failure.sh
+  php:deploy:
+    name: Deploy
+    needs:
+        php:test:
+            result: [success]
+    steps:
+      - uses: actions/checkout@v2
+      - name: chatops:deploy
+          run: echo "Execute some chatbot to ask manual deploy"
+      - name: php:deploy
+          run: echo "Triggered by chatbot response"
+      - name: Deploy Failure Handler
+          if: ${{ failure() }}
+          run: |
+            chmod +x ./on_deploy_failure.sh
+            sh ./on_deploy_failure.sh

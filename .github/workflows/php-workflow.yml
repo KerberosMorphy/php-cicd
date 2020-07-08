@@ -18,16 +18,16 @@ jobs:
             - uses: actions/checkout@v2
             - name: Publish PHP Image
               uses: docker/build-push-action@v1.1.0
-                with:
-                    name: $PHP_IMAGE
-                    username: ${{ github.actor }}
-                    password: $GITHUB_TOKEN
-                    registry: docker.pkg.github.com
-                    cache_froms: $PHP_IMAGE:latest
-                    dockerfile: docker/Dockerfile
-                    repository: $GITHUB_REPOSITORY
-                    tag_with_sha: true
-                    tags: latest
+              with:
+                name: $PHP_IMAGE
+                username: ${{ github.actor }}
+                password: $GITHUB_TOKEN
+                registry: docker.pkg.github.com
+                cache_froms: $PHP_IMAGE:latest
+                dockerfile: docker/Dockerfile
+                repository: $GITHUB_REPOSITORY
+                tag_with_sha: true
+                tags: latest
             - name: Publish PHP Test Image
                 uses: docker/build-push-action@v1.1.0
                 with:

@@ -13,7 +13,7 @@ les concepts peuvent être appliqués à n'importe quel langage.
 
 ## Fichier `.gitlab-ci.yml`
 
-Dans le fichier `.gitlab-ci.yml` situé à la racine du projet, nous avons 5 parties.
+Dans le fichier `.gitlab-ci.yml` situé à la racine du projet, nous avons 5 parties.hh
 
 ### Stages
 

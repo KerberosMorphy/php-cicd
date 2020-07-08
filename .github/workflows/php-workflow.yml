@@ -17,7 +17,7 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: Publish PHP Image
-                uses: docker/build-push-action@v1.1.0
+              uses: docker/build-push-action@v1.1.0
                 with:
                     name: $PHP_IMAGE
                     username: ${{ github.actor }}

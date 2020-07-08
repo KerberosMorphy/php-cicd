@@ -17,21 +17,14 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: Get file changes
-              id: file_changes
-              uses: trilom/file-changes-action@v1.2.0
+              id: get_file_changes
+              uses: dorner/file-changes-action@v1.2.0
               with:
                 githubToken: ${{ github.token }}
                 plaintext: true
             - name: Show file
               run: |
-                cat $HOME/files.json
-                cat $HOME/files_modified.json
-                cat $HOME/files_added.json
-                cat $HOME/files_removed.json
-                echo '${{ steps.file_changes.outputs.files}}'
-                echo '${{ steps.file_changes.outputs.files_modified}}'
-                echo '${{ steps.file_changes.outputs.files_added}}'
-                echo '${{ steps.file_changes.outputs.files_removed}}'
+                echo Changed files: ${{ steps.get_file_changes.outputs.files }}
             - run:  git diff-tree --no-commit-id --name-only -r ${{ github.sha }}
             - name: Publish PHP Image
               uses: docker/build-push-action@v1.1.0

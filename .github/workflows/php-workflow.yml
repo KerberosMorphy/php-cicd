@@ -12,7 +12,7 @@ env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-    php:build:
+    php_build:
         name: Builds
         runs-on: ubuntu-latest
         steps:
@@ -47,11 +47,11 @@ jobs:
               run: |
                 chmod +x ./scripts/on_build_failure.sh
                 sh ./scripts/on_build_failure.sh
-    php:test:
+    php_test:
         name: Tests
         runs-on: ubuntu-latest
         container: $PHP_TEST_IMAGE:latest
-        needs: ["php:build"]
+        needs: ["php_build"]
         steps:
             - uses: actions/checkout@v2
             - name: Unit Test
@@ -67,10 +67,10 @@ jobs:
               run: |
                 chmod +x ./scripts/on_test_failure.sh
                 sh ./scripts/on_test_failure.sh
-    php:deploy:
+    php_deploy:
         name: Deploy
         runs-on: ubuntu-latest
-        needs: ["php:test"]
+        needs: ["php_test"]
         steps:
             - uses: actions/checkout@v2
             - name: chatops:deploy

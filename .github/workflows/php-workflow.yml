@@ -42,11 +42,10 @@ jobs:
             tag_with_sha: true
             tags: latest
       - name: Build Failure Handler
-          working-directory: ./scripts
           if: ${{ failure() }}
           run: |
-            chmod +x ./on_build_failure.sh
-            sh ./on_build_failure.sh
+            chmod +x ./scripts/on_build_failure.sh
+            sh ./scripts/on_build_failure.sh
   php:test:
     name: Tests
     runs-on: ubuntu-latest
@@ -65,11 +64,10 @@ jobs:
       - name: Functional Test
           run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
       - name: Test Failure Handler
-          working-directory: ./scripts
           if: ${{ failure() }}
           run: |
-            chmod +x ./on_test_failure.sh
-            sh ./on_test_failure.sh
+            chmod +x ./scripts/on_test_failure.sh
+            sh ./scripts/on_test_failure.sh
   php:deploy:
     name: Deploy
     needs:
@@ -82,8 +80,7 @@ jobs:
       - name: php:deploy
           run: echo "Triggered by chatbot response"
       - name: Deploy Failure Handler
-          working-directory: ./scripts
           if: ${{ failure() }}
           run: |
-            chmod +x ./on_deploy_failure.sh
-            sh ./on_deploy_failure.sh
+            chmod +x ./scripts/on_deploy_failure.sh
+            sh ./scripts/on_deploy_failure.sh

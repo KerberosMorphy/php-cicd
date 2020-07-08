@@ -40,7 +40,7 @@ jobs:
                 cache_froms: ${{ env.PHP_IMAGE }}:latest,${{ env.PHP_TEST_IMAGE }}:latest
                 dockerfile: docker/Test.Dockerfile
                 repository: ${{ env.PHP_TEST_IMAGE }}
-                build_args: base_image=${{ env.PHP_IMAGE }}:latest
+                build_args: base_image="${{ env.PHP_IMAGE }}:latest"
                 tag_with_sha: true
                 tags: latest
             - name: Build Failure Handler

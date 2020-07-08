@@ -51,7 +51,7 @@ jobs:
         name: Tests
         runs-on: ubuntu-latest
         container: $PHP_TEST_IMAGE:latest
-        needs: [php:build]
+        needs: ["php:build"]
         steps:
             - uses: actions/checkout@v2
             - name: Unit Test
@@ -70,7 +70,7 @@ jobs:
     php:deploy:
         name: Deploy
         runs-on: ubuntu-latest
-        needs: [php:test]
+        needs: ["php:test"]
         steps:
             - uses: actions/checkout@v2
             - name: chatops:deploy

@@ -68,11 +68,15 @@ jobs:
               run: |
                 chmod +x ./scripts/on_build_failure.sh
                 sh ./scripts/on_build_failure.sh
+
     php_test:
         name: Tests
         runs-on: ubuntu-latest
+        env:
+            DOCKER_REGISTRY: ${{ env.DOCKER_REGISTRY }}
+            PHP_TEST_IMAGE: ${{ env.PHP_TEST_IMAGE }}
         container: 
-            image: "${DOCKER_REGISTRY}/${PHP_TEST_IMAGE}:latest"
+            image: "$DOCKER_REGISTRY/$PHP_TEST_IMAGE:latest"
         needs: ["php_build"]
         steps:
             - uses: actions/checkout@v2
@@ -89,6 +93,7 @@ jobs:
               run: |
                 chmod +x ./scripts/on_test_failure.sh
                 sh ./scripts/on_test_failure.sh
+
     php_deploy:
         name: Deploy
         runs-on: ubuntu-latest

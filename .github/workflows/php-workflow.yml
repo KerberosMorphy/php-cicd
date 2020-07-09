@@ -26,9 +26,12 @@ jobs:
               run: |
                 echo ${{ env.DOCKER_PASSWORD }} | docker login ${{env.DOCKER_REGISTRY}} --username ${{env.DOCKER_USERNAME}} --password-stdin
                 echo ${{ env.PHP_IMAGE }}:latest
-                docker manifest inspect ${{ env.PHP_IMAGE }}:latest > /dev/null ; echo $?
-                echo "::set-output name=php_image_exist::$({docker manifest inspect ${{ env.PHP_IMAGE }}:latest && echo 0} || echo 1)"
-                echo "::set-output name=php_test_image_exist::$({docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest && echo 0} || echo 1)"
+                php_image=$(docker manifest inspect ${{ env.PHP_IMAGE }}:latest && echo 0 || echo 1)
+                php_test_image=$(docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest && echo 0 || echo 1)
+                echo "::set-output name=php_image_exist::$php_image"
+                echo "::set-output name=php_test_image_exist::$php_test_image"
+                echo ${{php_image}}
+                echo ${{php_test_image}}
                 echo ${{steps.get_docker_images_exist.outputs.php_image_exist}}
                 echo ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
             - name: Get file changes
@@ -39,7 +42,7 @@ jobs:
                 plaintext: true
             - name: Publish PHP Image
               # In this if, remove the or if use github docker registry
-              if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile') || !${{steps.get_docker_images_exist.outputs.php_image_exist}}
+              if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile') || ${{steps.get_docker_images_exist.outputs.php_image_exist}} != 0
               uses: docker/build-push-action@v1.1.0
               with:
                 name: ${{ env.PHP_IMAGE }}

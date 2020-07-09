@@ -1,0 +1,25 @@
+name: Manually triggered deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      is_approved:
+        description: 'If the deploy is approved'
+        required: true
+        default: '0'
+
+jobs:
+  php_deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: DeployApproved
+        if: ((github.event.inputs.is_approved))
+        run: |
+          echo "Deploy have been approved and will start."
+      - name: Deploy Denied
+        if: ((!github.event.inputs.is_approved))
+        run: |
+          echo "Deploy have been denied."

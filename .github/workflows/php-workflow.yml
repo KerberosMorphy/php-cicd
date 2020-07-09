@@ -73,11 +73,11 @@ jobs:
         name: Tests
         runs-on: ubuntu-latest
         needs: ["php_build"]
-        container:
+        container: docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
             # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
             # Variable not working in container image name
             # https://github.community/t/how-to-use-env-with-container-image/17252
-            image: docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
+            # image: docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
         steps:
             - uses: actions/checkout@v2
             - name: Unit Test

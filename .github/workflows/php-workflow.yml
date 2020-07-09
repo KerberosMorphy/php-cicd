@@ -41,11 +41,9 @@ jobs:
             - run: |
                 echo ${{ steps.get_docker_images_exist.outputs.php_image_exist }}
                 echo ${{ steps.get_docker_images_exist.outputs.php_test_image_exist }}
-                echo $(${{ steps.get_docker_images_exist.outputs.php_image_exist }} != 0)
-                echo $(${{ steps.get_docker_images_exist.outputs.php_test_image_exist }} != 0)
             - name: Publish PHP Image
               # In this if, remove the or if use github docker registry
-              if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile') || ${{steps.get_docker_images_exist.outputs.php_image_exist}} != 0
+              if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile') || !steps.get_docker_images_exist.outputs.php_image_exist
               uses: docker/build-push-action@v1.1.0
               with:
                 name: ${{ env.PHP_IMAGE }}
@@ -59,7 +57,7 @@ jobs:
                 tags: latest
             - name: Publish PHP Test Image
               # In this if, remove the or if use github docker registry
-              if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
+              if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !steps.get_docker_images_exist.outputs.php_test_image_exist
               uses: docker/build-push-action@v1.1.0
               with:
                 name: ${{ env.PHP_TEST_IMAGE }}

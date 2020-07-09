@@ -73,10 +73,10 @@ jobs:
         name: Tests
         runs-on: ubuntu-latest
         env:
-            DOCKER_REGISTRY2: ${{ env.DOCKER_REGISTRY }}
+            # DOCKER_REGISTRY2: ${{ env.DOCKER_REGISTRY }}
             PHP_TEST_IMAGE2: ${{ env.PHP_TEST_IMAGE }}
         container: 
-            image: "$DOCKER_REGISTRY2/$PHP_TEST_IMAGE2:latest"
+            image: "$DOCKER_REGISTRY/$PHP_TEST_IMAGE2:latest"
         needs: ["php_build"]
         steps:
             - uses: actions/checkout@v2

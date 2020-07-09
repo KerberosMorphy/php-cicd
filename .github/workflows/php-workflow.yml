@@ -24,7 +24,6 @@ jobs:
               env:
                 DOCKER_CLI_EXPERIMENTAL: enabled
               run: |
-                set +e
                 echo ${{ env.DOCKER_PASSWORD }} | docker login ${{env.DOCKER_REGISTRY}} --username ${{env.DOCKER_USERNAME}} --password-stdin
                 echo ${{ env.PHP_IMAGE }}:latest
                 docker manifest inspect ${{ env.PHP_IMAGE }}:latest > /dev/null ; echo $?
@@ -32,7 +31,6 @@ jobs:
                 echo "::set-output name=php_test_image_exist::$({docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest && echo 0} || echo 1)"
                 echo ${{steps.get_docker_images_exist.outputs.php_image_exist}}
                 echo ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
-                set -e
             - name: Get file changes
               id: get_file_changes
               uses: dorner/file-changes-action@v1.2.0
@@ -40,6 +38,7 @@ jobs:
                 githubToken: ${{ github.token }}
                 plaintext: true
             - name: Publish PHP Image
+              # In this if, remove the or if use github docker registry
               if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile') || !${{steps.get_docker_images_exist.outputs.php_image_exist}}
               uses: docker/build-push-action@v1.1.0
               with:
@@ -53,6 +52,7 @@ jobs:
                 tag_with_sha: true
                 tags: latest
             - name: Publish PHP Test Image
+              # In this if, remove the or if use github docker registry
               if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
               uses: docker/build-push-action@v1.1.0
               with:

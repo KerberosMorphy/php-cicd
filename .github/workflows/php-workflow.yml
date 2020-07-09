@@ -33,9 +33,6 @@ jobs:
                 echo ${{steps.get_docker_images_exist.outputs.php_image_exist}}
                 echo ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
                 set -e
-            - run: |
-                echo ${{steps.get_docker_images_exist.outputs.php_image_exist}}
-                echo ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
             - name: Get file changes
               id: get_file_changes
               uses: dorner/file-changes-action@v1.2.0
@@ -43,7 +40,7 @@ jobs:
                 githubToken: ${{ github.token }}
                 plaintext: true
             - name: Publish PHP Image
-              if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
+              if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile') || !${{steps.get_docker_images_exist.outputs.php_image_exist}}
               uses: docker/build-push-action@v1.1.0
               with:
                 name: ${{ env.PHP_IMAGE }}
@@ -56,7 +53,7 @@ jobs:
                 tag_with_sha: true
                 tags: latest
             - name: Publish PHP Test Image
-              if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile')
+              if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
               uses: docker/build-push-action@v1.1.0
               with:
                 name: ${{ env.PHP_TEST_IMAGE }}

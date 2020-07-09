@@ -28,14 +28,14 @@ jobs:
                 echo ${{ env.DOCKER_PASSWORD }} | docker login ${{env.DOCKER_REGISTRY}} --username ${{env.DOCKER_USERNAME}} --password-stdin
                 echo ${{ env.PHP_IMAGE }}:latest
                 docker manifest inspect ${{ env.PHP_IMAGE }}:latest > /dev/null ; echo $?
-                exist=$({docker manifest inspect ${{ env.PHP_IMAGE }}:latest && echo 0} || echo 1)
-                echo "::set-output name=php_image_exist::$exist
+                echo "::set-output name=php_image_exist::$({docker manifest inspect ${{ env.PHP_IMAGE }}:latest && echo 0} || echo 1)"
+                echo "::set-output name=php_test_image_exist::$({docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest && echo 0} || echo 1)"
                 echo ${{steps.get_docker_images_exist.outputs.php_image_exist}}
-                echo "##[set-output name=php_test_image_exist;]$(docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest > /dev/null && echo 0 || echo 1)"
+                echo ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
                 set -e
             - run: |
                 echo ${{steps.get_docker_images_exist.outputs.php_image_exist}}
-                echo steps.get_docker_images_exist.outputs.php_test_image_exist
+                echo ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
             - name: Get file changes
               id: get_file_changes
               uses: dorner/file-changes-action@v1.2.0

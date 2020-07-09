@@ -48,7 +48,7 @@ jobs:
                 image: ${{ env.PHP_IMAGE }}:latest
             - if: steps.is_php_image_exist.outputs.image_exist
               run: echo "TRUE"
-            - if: !steps.is_php_image_exist.outputs.image_exist
+            - if: ((!steps.is_php_image_exist.outputs.image_exist))
               run: echo "FALSE"
             - name: Publish PHP Image
               # In this if, remove the or if use github docker registry

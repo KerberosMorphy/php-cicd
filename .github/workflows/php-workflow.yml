@@ -70,7 +70,8 @@ jobs:
     php_test:
         name: Tests
         runs-on: ubuntu-latest
-        container: docker.pkg.github.com/$PHP_TEST_IMAGE:latest
+        container: 
+            image: "docker.pkg.github.com/${{ PHP_TEST_IMAGE }}:latest"
         needs: ["php_build"]
         steps:
             - uses: actions/checkout@v2

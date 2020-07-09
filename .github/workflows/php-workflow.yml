@@ -26,14 +26,12 @@ jobs:
               run: |
                 echo ${{ env.DOCKER_PASSWORD }} | docker login ${{env.DOCKER_REGISTRY}} --username ${{env.DOCKER_USERNAME}} --password-stdin
                 echo ${{ env.PHP_IMAGE }}:latest
-                php_image=$(docker manifest inspect ${{ env.PHP_IMAGE }}:latest && echo 0 || echo 1)
-                php_test_image=$(docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest && echo 0 || echo 1)
-                echo "::set-output name=php_image_exist::$php_image"
-                echo "::set-output name=php_test_image_exist::$php_test_image"
-                echo ${{php_image}}
-                echo ${{php_test_image}}
-                echo ${{steps.get_docker_images_exist.outputs.php_image_exist}}
-                echo ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}
+                echo "There $(docker manifest inspect ${{ env.PHP_IMAGE }}:latest && echo 0 || echo 1)"
+                echo "There again $(docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest && echo 0 || echo 1)"
+                echo "::set-output name=php_image_exist::$(docker manifest inspect ${{ env.PHP_IMAGE }}:latest && echo 0 || echo 1)"
+                echo "::set-output name=php_test_image_exist::$(docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest && echo 0 || echo 1)"
+                echo "PHP: ${{steps.get_docker_images_exist.outputs.php_image_exist}}"
+                echo "TEST: ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}"
             - name: Get file changes
               id: get_file_changes
               uses: dorner/file-changes-action@v1.2.0

@@ -9,7 +9,7 @@ on:
 env:
     PHP_IMAGE: ${{ github.repository }}/gh-php
     PHP_TEST_IMAGE: ${{ github.repository }}/gh-php-test
-    DOCKER_REGISTRY: docker.pkg.github.com
+    DOCKER_REGISTRY: docker.pkg.github.com/v2
 
 jobs:
     php_build:

@@ -18,20 +18,8 @@ jobs:
         name: Builds
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v2
-            # - name: Get docker images exist # Doesn't work with docker.pkg.github.com
-            #   id: get_docker_images_exist
-            #   env:
-            #     DOCKER_CLI_EXPERIMENTAL: enabled
-            #   run: |
-            #     echo ${{ env.DOCKER_PASSWORD }} | docker login ${{env.DOCKER_REGISTRY}} --username ${{env.DOCKER_USERNAME}} --password-stdin
-            #     echo ${{ env.PHP_IMAGE }}:latest
-            #     echo "There: $(docker manifest inspect ${{ env.PHP_IMAGE }}:latest > /dev/null && echo 0 || echo 1)"
-            #     echo "There again: $(docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest > /dev/null && echo 0 || echo 1)"
-            #     echo "::set-output name=php_image_exist::$(docker manifest inspect ${{ env.PHP_IMAGE }}:latest > /dev/null && echo 0 || echo 1)"
-            #     echo "::set-output name=php_test_image_exist::$(docker manifest inspect ${{ env.PHP_TEST_IMAGE }}:latest > /dev/null && echo 0 || echo 1)"
-            #     echo "PHP: ${{steps.get_docker_images_exist.outputs.php_image_exist}}"
-            #     echo "TEST: ${{steps.get_docker_images_exist.outputs.php_test_image_exist}}"
+            - name: Checkout Repo
+              uses: actions/checkout@v2
             - name: Get file changes
               id: get_file_changes
               uses: dorner/file-changes-action@v1.2.0
@@ -46,10 +34,6 @@ jobs:
                 username: ${{ secrets.DOCKER_USERNAME }}
                 password: ${{ secrets.DOCKER_PASSWORD }}
                 image: ${{ env.PHP_IMAGE }}:latest
-            - if: steps.is_php_image_exist.outputs.image_exist
-              run: echo "TRUE"
-            - if: ((!steps.is_php_image_exist.outputs.image_exist))
-              run: echo "FALSE"
             - name: Publish PHP Image
               # In this if, remove the or if use github docker registry
               if: contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile') || !((steps.is_php_image_exist.outputs.image_exist))
@@ -66,14 +50,14 @@ jobs:
                 tags: latest
             - name: Check if PHP Test image exist in registry
               id: is_php_test_image_exist
-              uses: tm-bverret/docker-exist-action@v1
+              uses: tm-bverret/docker-exist-action@master
               with:
                 registry: docker.io
                 username: ${{ secrets.DOCKER_USERNAME }}
                 password: ${{ secrets.DOCKER_PASSWORD }}
                 image: ${{ env.PHP_TEST_IMAGE }}:latest
             - name: Publish PHP Test Image
-              if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !steps.is_php_test_image_exist.outputs.image_exist
+              if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !((steps.is_php_test_image_exist.outputs.image_exist))
               uses: docker/build-push-action@v1.1.0
               with:
                 name: ${{ env.PHP_TEST_IMAGE }}

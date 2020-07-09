@@ -9,6 +9,7 @@ on:
 env:
     PHP_IMAGE: ${{ github.repository }}/gh-php
     PHP_TEST_IMAGE: ${{ github.repository }}/gh-php-test
+    DOCKER_REGISTRY: docker.pkg.github.com
 
 jobs:
     php_build:
@@ -21,7 +22,7 @@ jobs:
             #   env:
             #     DOCKER_CLI_EXPERIMENTAL: enabled
             #   run: |
-            #     echo ${{github.token}} | docker login docker.pkg.github.com --username ${{github.actor}} --password-stdin
+            #     echo ${{github.token}} | docker login ${{env.DOCKER_REGISTRY}} --username ${{github.actor}} --password-stdin
             #     echo ${{ env.PHP_IMAGE }}:latest
             #     docker manifest inspect ${{ env.PHP_IMAGE }}:latest > /dev/null ; echo $?
             #     echo "##[set-output name=php_image_exist;]$(docker manifest inspect ${{ env.PHP_IMAGE }}:latest > /dev/null ; echo $?)""
@@ -42,7 +43,7 @@ jobs:
                 name: ${{ env.PHP_IMAGE }}
                 username: ${{ github.actor }}
                 password: ${{ github.token }}
-                registry: docker.pkg.github.com
+                registry: ${{env.DOCKER_REGISTRY}}
                 cache_froms: ${{ env.PHP_IMAGE }}:latest
                 dockerfile: docker/Dockerfile
                 repository: ${{ env.PHP_IMAGE }}
@@ -55,11 +56,11 @@ jobs:
                 name: ${{ env.PHP_TEST_IMAGE }}
                 username: ${{ github.actor }}
                 password: ${{ github.token }}
-                registry: docker.pkg.github.com
+                registry: ${{env.DOCKER_REGISTRY}}
                 cache_froms: ${{ env.PHP_IMAGE }}:latest,${{ env.PHP_TEST_IMAGE }}:latest
                 dockerfile: docker/Test.Dockerfile
                 repository: ${{ env.PHP_TEST_IMAGE }}
-                build_args: base_image=docker.pkg.github.com/${{env.PHP_IMAGE}}:latest
+                build_args: base_image=${{env.DOCKER_REGISTRY}}/${{env.PHP_IMAGE}}:latest
                 tag_with_sha: true
                 tags: latest
             - name: Build Failure Handler
@@ -71,7 +72,7 @@ jobs:
         name: Tests
         runs-on: ubuntu-latest
         container: 
-            image: "docker.pkg.github.com/${{ PHP_TEST_IMAGE }}:latest"
+            image: "${{env.DOCKER_REGISTRY}}/${{ env.PHP_TEST_IMAGE }}:latest"
         needs: ["php_build"]
         steps:
             - uses: actions/checkout@v2

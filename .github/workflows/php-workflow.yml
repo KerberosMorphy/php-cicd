@@ -85,8 +85,8 @@ jobs:
       # https://github.community/t/how-to-use-env-with-container-image/17252
       # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
       # Github PKG Docker not working in container section
-      # image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
-      image: docker://docker.io/kerberosmorphy/gh-php-test:latest
+      image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
+    #   image: docker://docker.io/kerberosmorphy/gh-php-test:latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2

@@ -1,162 +1,234 @@
-# GitLab CI
+# GitHub Action
 
-Explication de l'expérimentation d'un pipeline de déploiement avec GitLab CI.
+Explication de l'expérimentation d'un pipeline de déploiement avec GitHub Action.
 L'utilisation de PHP est uniquement pour la démonstration,
 les concepts peuvent être appliqués à n'importe quel langage.
+Des éléments seront sauté puisque déjà abordé dans les exemples avec **Bitbucket** et **GitLab**.
 
 ## Sections
 
-- [`.gitlab-ci.yml`](##fichier-gitlab-ciyml`)
-- [`PHP-Build.gitlab-ci.yml`](docs/PHP-Build.md)
-- [`PHP-Unit-Test.gitlab-ci.yml`](docs/PHP-Unit-Test.md)
-- [`PHP-Deploy.gitlab-ci.yml`](docs/PHP-Deploy.md)
+- [**Dossier** `.github`](##dossier-github`)
+- [**Projet** `php-cicd`](##projet-php-cicd)
+  - [**Fichier** `php-worflow.yml`](###fichier-php-workflowyml)
+    - [**Élément** `name`](####élément-name)
+    - [**Élément** `on`](####élément-on)
+    - [**Élément** `env`](####élément-env)
+    - [**Élément** `jobs`](####élément-jobs)
+  - [**Fichier** `php-deploy-worflow.yml`](###fichier-php-deploy-workflowyml)
+    - [**Élément deploy** `on`](####élément-deploy-on)
+    - [**Élément deploy** `jobs`](####élément-deploy-jobs)
+- [**Action** `docker-exist-action`](##action-docker-exist-action)
+  - [**Fichier** `action.yml`](###fichier-actionyml)
+  - [**Fichier** `Dockerfile`](###fichier-dockerfile)
+  - [**Fichier** `entrypoint.sh`](###fichier-entrypointsh)
+  - [**Fichier** `.github/workflows/main.yml`](###fichier-github/workflows/mainyml)
+- [**GitHub Marketplace**](##github-marketplace)
 
-## Fichier `.gitlab-ci.yml`
+## Dossier `.github`
 
-Dans le fichier `.gitlab-ci.yml` situé à la racine du projet, nous avons 5 parties.h
+J'aborde rapidement le dossier `.github` qui accept certain fichiers/dossiers qui sont interprété par GitHub.
+Plusieurs **Action** du Marketplace utilise aussi ce dossier pour leur fichier de configuration.
+L'élément le plus important pour cette exemple sera le dossier `workflow`.
 
-### Stages
+- `CODE_OF_CONDUCT.md`: Décrit à la communauté voulant contribuer comment se comporter.
+- `CONTRIBUTING.md`: Décrit comment contribuer au projet (aide techniquement).
+- `FUNDING.yml`: Indique que le projet cherche du financement et comment contribuer financièrement.
+- `ISSUE_TEMPLATE`: Dossier offrant plusieurs templates différents lors de rapport de bug selon le type de rapport. Voir [TensorFlow](https://github.com/tensorflow/tensorflow/tree/f3fd82f65724cdba600fdd23d251c2b01152ed3c/.github/ISSUE_TEMPLATE) pour une bonne exemple.
+- `PULL_REQUEST_TEMPLATE.md`: Template à compléter lors de *Pull Request*.
+- `SECURITY.md`: La démarche à suivre pour rapporter une faille de sécurité.
+- `workflows`: Dossier ne pouvant posséder que des fichier **YAML** qui serons tous, sans exception, interprété comme un **Workflow** en lien avec **GitHub Action**.
 
-La clef `stages` sert a définir les étapes de notre pipeline.
+[↑ Table des matières ↑](##sections)
 
-```yml
-stages:
-  - build
-  - build:test
-  - build:failure
-  - test:unit
-  - test:integration
-  - test:functional
-  - test:acceptance
-  - test:coverage
-  - test:failure
-  - deploy
-  - deploy:failure
-```
+## Projet `php-cicd`
 
-### Variables
+Point particulier, GitHub Action gère nativement le **shell script** ainsi que le **javascript**. Dans cette exemple j'ai priorisé l'utilisation du **shell script**.
 
-Le fait de définir les variables à l'extérieur d'un `Jobs` rend ces variables accessibles dans toutes les `Jobs`.
-On peut simplifier en disant que les variables sont déclarées *globalement*.
+Un **Workflow** représente un pipeline qui peu être subdivisé en **Job** et une job peut être subdivisé en étape.
 
-```yml
-variables:
-  PHP_IMAGE: $CI_REGISTRY_IMAGE
-  PHP_TEST_IMAGE: $CI_REGISTRY_IMAGE/php_test
-```
+### Fichier `php-worflow.yml`
 
-La clef `PHP_IMAGE` représente le nom de l'image principale au registre GitLab.
+#### Élément `name`
 
-La clef `PHP_TEST_IMAGE` représente le nom de l'image utilisé pour les tests, plus de détail dans la section [`PHP-Build`](docs/PHP-Build.md).
+Optionnel, permet de nommer le pipeline. Par défaut il sera représenté par le nom du fichier YAML.
 
-### Include
+#### Élément `on`
 
-Le mot clef `include` permet d'ajouter des actions GitLab CI provenant de ressources externes.
-Les fichiers peuvent être présent à même le repo du projet et être ciblés grâce à la clef `local`, mais peuvent aussi provenir d'un autre repo, d'un URL public ou de template officiel de GitLab, [plus d'information ici](https://docs.gitlab.com/ee/ci/yaml/#include).
+Élément déclencheur du *Workflow*, c'est ici qu'on peut définir un ou plusieurs éléments qui pourrons déclencher l'action.
 
-Importation des Jobs définis localement. L'ordre peut être important, car la dernière pourrait remplacer des éléments ayant le même nom.
-
-```yml
-
-include:
-  - local: /gitlab-ci/Jobs/PHP-Build.gitlab-ci.yml
-  - project: benoit.verret.tm/php-cicd
-    ref: master
-    file: /gitlab-ci/Jobs/PHP-Unit-Test.gitlab-ci.yml
-  - local: /gitlab-ci/Jobs/PHP-Deploy.gitlab-ci.yml
-```
-
-Pour l'exemple, bien que le fichier soit local dans le projet, j'ai joint une démonstration d'importation depuis un différent projet, on peut donc spécifier le non du projet, la branche et l'emplacement du fichier dans le projet. Si le projet fait parti d'un groupe on ferait `project: mon-groupe/mon-projet`.
-
-En dehors des `Jobs`, on pourrait aussi imaginer avoir nos variables à l'extérieur.
-
-### Before Script
-
-La clef `before_script` définie du script a exécuté avant les scripts "normal" et pour toutes les `Jobs`, son contenu sera donc exécuté à nouveau avant le script de chaque `Job`.
+Dans ce cas ci, le *workflow* se déclenche lors d'un push sur les branches `master` ou `production`.
 
 ```yml
-before_script:
-  - *auto_devops
-  - set_stage_variable
+on:
+  push:
+    branches:
+      - master
+      - production
 ```
 
-On peut voir ici l'utilisation de la syntaxe spéciale **YAML** `*auto_devops` qui permet d'inclure le contenu de l'ancre `&auto_devops`.
+Si j'aurai voulu le faire sur toutes les branches j'aurai aussi pu écrire:
 
-### Utilisation d'ancre et définition de fonction
-
-*Noter que le nom `.auto_devops` est arbitraire.*
-
-J'ai défini plusieurs fonctions que je peux réutiliser au travers des `Jobs` selon les besoins.
-
-Par exemple, `registry_login` nous log au registry de GitLab, mais on aurait aussi pu mettre une condition du type **« Si la variable AWS_ECR est définie, se connecter au Registry d'AWS ECR »**.
-
-```sh
-  function registry_login() {
-    if [[ -n "$CI_REGISTRY_USER" ]]; then
-      echo "Logging to GitLab Container Registry with CI credentials..."
-      echo $CI_REGISTRY_PASSWORD | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-      echo ""
-    fi
-  }
+```yml
+on: [push]
 ```
 
-La fonction `build_docker` permet de construire l'image, elle va récupérer la plus récente si elle existe et l'utiliser comme cache pour en construire une nouvelle avec les modifications appliquées. C'est en suivant l'exemple de GitLab que j'ai choisi de construire 2 images, un avec le tag latest, l'autre avec le hash du commit comme tag, cette méthode permet de garder un suivi des versions. Une fois construit, les images seront poussées vers le registry du projet de GitLab.
+Ou encore:
 
-Comparativement à la démonstration [Serverless-CICD](https://gitlab.com/benoit.verret.tm/serverless-cicd), des options ont été ajouté pour construire depuis des `Dockerfile` différent.
-
-Nous avons donc les options suivante:
-
-- **`-i`** : Sert à spécifier le nom de l'image dans le registre d'image GitLab. Il sera utilisé ainsi « `build_docker -i "$PHP_IMAGE"` »;
-
-- **`-d`** : Sert à spécifier le nom du `Dockerfile` à utiliser, les dockerfile doivent être situé dans le dossier `docker/`. Il sera utilisé ainsi « `build_docker -i "$PHP_TEST_IMAGE" -d "Test.Dockerfile"` »;
-
-- **`-a`** : Sert à spécifier les arguments à passer au `Dockerfile` pour personnaliser l'image, les dockerfile doivent être situé dans le dossier `docker/`. Par exemple, dans `Test.Dockerfile` je construis mon image en la base sur `php:7.4` par défaut, mais je me laisse l'option de pouvoir la bâtir sur un autre image tel que l'image préalablement construite « `build_docker -i "$PHP_TEST_IMAGE" -d "Test.Dockerfile" -a "base_image=$PHP_IMAGE:latest"` ». Cette méthode pourrait être fait pour utiliser des version php différente.;
-
-```sh
-  function build_docker() {
-    dockerfile="Dockerfile"
-    image_name=$CI_REGISTRY_IMAGE
-    echo "Set registry image name to build..."
-    while getopts ":i:d:a:" opt; do
-      case $opt in
-        i) image_name="$OPTARG";;
-        d) dockerfile="$OPTARG";;
-        a) args="$OPTARG";;
-      esac
-    done
-    echo "Image name set to $image_name"
-    echo "Dockerfile set to $dockerfile"
-    echo ""
-    echo "Pull image from registry to by used as cache..."
-    docker pull --quiet $image_name:latest || true
-    echo ""
-    if [ -n "$args" ]; then
-      echo "Build image with args $args from pulled image cache and create `latest` and `commit_sha` tags..."
-      echo "docker build --quiet --cache-from $image_name:latest --build-arg $args --tag $image_name:$CI_COMMIT_SHA --tag $image_name:latest -f 'docker/$dockerfile' 'docker/'"
-      docker build --quiet --cache-from $image_name:latest --build-arg $args --tag $image_name:$CI_COMMIT_SHA --tag $image_name:latest -f "docker/$dockerfile" "docker/"
-    else
-      echo "Build image from pulled image cache and create `latest` and `commit_sha` tags..."
-      docker build --quiet --cache-from $image_name:latest --tag $image_name:$CI_COMMIT_SHA --tag $image_name:latest -f "docker/$dockerfile" "docker/"
-    fi
-    echo ""
-    echo "Push the tagged Docker images to the container registry.."
-    docker push $image_name:$CI_COMMIT_SHA
-    docker push $image_name:latest
-    echo ""
-  }
+```yml
+on:
+  push:
+    branches:
+      - "*"
 ```
 
-Finalement, la fonction `set_stage_variable` me permet de définir ma variable `$STAGE` selon ma branche, l'exemple ici indique que pour la branche `master` mon stage est `staging` et que pour la branche `production` il utilisera `production`. La variable `$STAGE` est ensuite passé lors des build/deploy tel que `yarn build --mode=$STAGE` ou `sls deploy --stage=$STAGE`.
+Il est aussi possible d'utiliser `*` et `**` pour représenter des patterns de nom de branche tel que `release-*`.
 
-```sh
-  function set_stage_variable() {
-    echo "Set current stage..."
-    if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then
-      export STAGE="staging"
-    elif [[ "$CI_COMMIT_REF_NAME" == "production" ]]; then
-      export STAGE="production"
-    fi
-    echo "Stage set to `$STAGE`"
-    echo ""
-  }
+Point fort de GitHub, la très très large variété d'**events** pouvant démarrer un *workflow*. Que ce soit l'ajout d'un nouveau membre au *repository* pour lui envoyer un courriel de bienvenu, envoyer un mot de remerciements à un utilisateur votant un étoile au projet. Pour plus d'information voir la [liste des events](https://docs.github.com/en/actions/reference/events-that-trigger-workflows).
+
+#### Élément `env`
+
+Permet de définir les variable d'environnement qui seront commun à l'entièreté des Jobs.
+On ne peut pas altérer ces variables, il faut les considérer comme constante, chaque **Job** est indépendante.
+
+Dans mon exemple, j'utilise les variables d'environnement pour partager l'adresse du registre de container utiliser pour stocker mes images. Pour `DOCKER_USERNAME` et `DOCKER_PASSWORD`, ils sont présent pour faciliter l'utilisation de registre autres, principalement celui de github auquel la clef n'a pas à être ajouter à nous **secrets** car elle est généré automatiquement et accessible via `${{ github.token }}` ou `${{ GITHUB_TOKEN }}`. L'utilisation de ces variable permet donc de facilement changer de registre sans avoir à revérifier le code.
+
+À noter que toutes les [variables par défaut de github](https://docs.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables) peuvent s'utiliser en minuscule en replaçant les `"_"` par des `"."`.
+
+```yml
+env:
+  DOCKER_REGISTRY: docker.io
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php
+  PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test
 ```
+
+#### Élément `jobs`
+
+J'ai diviser ce *workflow* en 3 *jobs* distinctes soit `php_build`, `php_test` et `php_deploy_request`.
+
+##### Builds
+
+Pour cette *job*, nous devons obligatoirement définir sur quel OS s'exécutera le code parmi ceux offert par GitHub. Les machines Linux offrant le plus de temps d'accès c'est donc à privilégier si notre projet ne nécessite pas l'utilisation de MacOS ou Windows.
+
+Optionnellement, nous pouvons donner un nom à notre *job* pour améliorer la lisibilité sur GitHub.
+
+```yml
+    name: Builds
+    runs-on: ubuntu-latest
+    steps:
+```
+
+Nous pouvons ensuite définir les étapes qui s'exécuterons en ordre dans notre *job*. Chaque étape peut être nommée et peut posséder différent élément conditionnel. Il s'agit d'un point fort de GitHub Action
+
+Dans la première étape, nous appelons l'action `actions/checkout@v2`, offert par GitHub, qui clone notre branche actuelle et nous permet d'accéder à nos fichiers dans les étapes subséquentes. Contrairement à Bitbucket et GitLab ou notre projet est cloné par défaut, cette méthode permet d'avoir des actions qui sont indépendante d'un projet, tel qu'une action déclenché manuellement via l'API de GitHub par le Hub pour ensuite envoyer des notifications (cas d'utilisation inutile par contre).
+
+```yml
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+```
+
+Pour l'étape suivante j'utilise l'action `trilom/file-changes-action@v1.2.4` qui me permet de récupérer la liste des fichiers ajouté/modifié/supprimé depuis le dernier push et de les produire en output. D'autres options sont aussi possible. Je déclare aussi un `id` qui est essentiel pour récupérer l'output généré par cette étape.
+
+```yml
+      - name: Get file changes
+        id: file_changes
+        uses: trilom/file-changes-action@v1.2.4
+        with:
+          githubToken: ${{ github.token }}
+          output: ";"
+```
+
+Par la suite, j'ai créé ma propre action basé sur Docker et que j'explique en profondeur [ici](##action-docker-exist-action) qui génère comme output `0` is l'image existe, `1` autrement. En soit, j'interroge un registre de container pour savoir si mon image existe. Ça vise à palier le cas ou on ajoute une mécanique CICD à un projet existant pour lequel nous n'avons pas à retoucher à son `Dockerfile` ou encore un projet ou nous désirons changer l'emplacement de nos images. La première exécution, même si le fichier n'a pas changé, générera tout de même l'étape de build.
+
+La clef `with` permet de définir les inputs de l'action.
+
+```yml
+      - name: Check if PHP image exist in registry
+        id: is_php_image_exist
+        uses: tm-bverret/docker-exist-action@v1.1.2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          image: ${{ env.PHP_IMAGE }}:latest
+```
+
+Pour la construction de l'image, j'utilise une action officiellement créé par Docker et qui facilite la mécanique. J'ai inclus la clef `if` qui me permet de définir dans quel condition cette étape doit être exécuté. GitHub offre certain function util tel que `contains` qui me permet de voir si le fichier `docker/Dockerfile` est présent dans les fichiers modifié de l'étape `file_changes`. J'ai aussi inclus la vérification de l'existence de l'image de l'étape `is_php_image_exist`.
+
+Parmi les inputs de cette action, j'ai indiqué de consulter la dernière image créé pour accélérer la nouvelle image. Cette image possédera le tag du `sha` du commit du à l'option `tag_with_sha` ainsi que tous les tags inclus dans `tags` (mettre dans une liste si plusieurs). Par défaut seul la `latest` est créé.
+
+```yml
+      - name: Publish PHP Image
+        # In this if, remove the or if use github docker registry
+        if: contains(steps.file_changes.outputs.files, 'docker/Dockerfile') || !((steps.is_php_image_exist.outputs.image_exist))
+        uses: docker/build-push-action@v1.1.0
+        with:
+          name: ${{ env.PHP_IMAGE }}
+          username: ${{env.DOCKER_USERNAME}}
+          password: ${{env.DOCKER_PASSWORD}}
+          registry: ${{env.DOCKER_REGISTRY}}
+          cache_froms: ${{ env.PHP_IMAGE }}:latest
+          dockerfile: docker/Dockerfile
+          repository: ${{ env.PHP_IMAGE }}
+          tag_with_sha: true
+          tags: latest
+```
+
+Pour l'image servant au test, l'étape est très similaire à celle précédente. J'aborderai donc uniquement les paramètres additionnel utilisé avec l'action `docker/build-push-action`. Bien qu'inutile de spécifier les deux, je voulais démontrer que nous pouvions utiliser plusieurs image comme cache dans `cache_froms`. Puisque l'image test permet des arguments nous pouvons utiliser `build_args` pour les inclure sous la forme d'une *string* `var1=1 var2=2`.
+
+```yml
+          cache_froms: ${{ env.PHP_IMAGE }}:latest,${{ env.PHP_TEST_IMAGE }}:latest
+          build_args: base_image=${{env.DOCKER_REGISTRY}}/${{env.PHP_IMAGE}}:latest
+```
+
+Finalement, pour la gestion des erreurs j'ai ajouté l'étape `Build Failure Handler` qui se déclenche uniquement si une étape précédente d'une même job à échoué. Il est aussi possible de cibler l'échec d'une étape préciser, nous pourrions donc traiter l'échec du build de base différemment de l'échec du build de test.
+
+```yml
+      - name: Build Failure Handler
+        if: failure()
+        run: |
+          chmod +x ./scripts/on_build_failure.sh
+          sh ./scripts/on_build_failure.sh
+```
+
+##### Tests
+
+Puisque par défaut les jobs s'exécute en parallèle et que nous désirons que les tests s'exécute après l'étape de build nous pouvons utiliser la clef `needs` pour définir la liste de toutes les *jobs* dont dépend celle-ci.
+
+Pour cette *job*, j'indique que toutes les étapes doivent être exécuté dans un **container précis** plutôt que directement sur la machine virtuel *Linux*. L'image doit obligatoirement être public et ne pas nécessiter 
+
+```yml
+  php_test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: ["php_build"]
+    container:
+      # Variable not working in container image name
+      # https://github.community/t/how-to-use-env-with-container-image/17252
+      # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
+      # Github PKG Docker not working in container section
+      # image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
+      image: docker://docker.io/kerberosmorphy/gh-php-test:latest
+```
+[↑ Table des matières ↑](##sections)
+
+### Fichier `php-deploy-worflow.yml`
+
+#### Élément deploy `on`
+
+#### Élément deploy `jobs`
+
+[↑ Table des matières ↑](##sections)
+
+## Projet `docker-exist-action`
+
+### Fichier `action.yml`
+
+### Fichier `Dockerfile`
+
+### Fichier `entrypoint.sh`
+
+### Fichier `.github/workflows/main.yml`
+
+## GitHub Marketplace

@@ -1,4 +1,4 @@
-name: Manually triggered deploy
+name: PHP Distant Workflow
 
 on:
   workflow_dispatch:

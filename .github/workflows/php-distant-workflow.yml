@@ -1,6 +1,9 @@
 name: PHP Distant Workflow
 
 on:
+  push:
+    branches:
+      - *
   workflow_dispatch:
     inputs:
       DOCKER_REGISTRY:

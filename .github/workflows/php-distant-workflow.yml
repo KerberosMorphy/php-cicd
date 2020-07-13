@@ -123,47 +123,47 @@ jobs:
           chmod +x ./scripts/on_build_failure.sh
           sh ./scripts/on_build_failure.sh
 
-    php_test:
-      name: Tests
-      runs-on: ubuntu-latest
-      needs: ["php_build"]
-      container:
-      # Variable not working in container image name
-      # https://github.community/t/how-to-use-env-with-container-image/17252
-      # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
-      # Github PKG Docker not working in container section
-      # image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
-      image: docker://docker.io/kerberosmorphy/gh-php-test:latest
+  php_test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: ["php_build"]
+    container:
+    # Variable not working in container image name
+    # https://github.community/t/how-to-use-env-with-container-image/17252
+    # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
+    # Github PKG Docker not working in container section
+    # image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
+    image: docker://docker.io/kerberosmorphy/gh-php-test:latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Unit Test
+        run: |
+          phpunit --bootstrap ./src/Calculator.php ./tests/CalculatorTest.php
+          phpunit --bootstrap ./src/Email.php ./tests/EmailTest.php
+      - name: Integration Test
+        run: phpunit --bootstrap ./src/Music.php ./tests/MusicIntegrationTest.php
+      - name: Functional Test
+        run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
+      - name: Test Failure Handler
+        if: failure()
+        run: |
+          chmod +x ./scripts/on_test_failure.sh
+          sh ./scripts/on_test_failure.sh
+
+  php_deploy_request:
+    name: Deploy Request
+    runs-on: ubuntu-latest
+    env:
+      DISPATCH_URL: /repos/${{ env.GH_REPOSITORY }}/actions/workflows/php-deploy-workflow.yml/dispatches
+      BODY: '{"ref":"${{ env.GH_REF }}", "is_approved":"1"}'
+      needs: ["php_test"]
       steps:
         - name: Checkout Repo
           uses: actions/checkout@v2
-        - name: Unit Test
-          run: |
-            phpunit --bootstrap ./src/Calculator.php ./tests/CalculatorTest.php
-            phpunit --bootstrap ./src/Email.php ./tests/EmailTest.php
-        - name: Integration Test
-          run: phpunit --bootstrap ./src/Music.php ./tests/MusicIntegrationTest.php
-        - name: Functional Test
-          run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
-        - name: Test Failure Handler
-          if: failure()
-          run: |
-            chmod +x ./scripts/on_test_failure.sh
-            sh ./scripts/on_test_failure.sh
-
-    php_deploy_request:
-      name: Deploy Request
-      runs-on: ubuntu-latest
-      env:
-        DISPATCH_URL: /repos/${{ env.GH_REPOSITORY }}/actions/workflows/php-deploy-workflow.yml/dispatches
-        BODY: '{"ref":"${{ env.GH_REF }}", "is_approved":"1"}'
-        needs: ["php_test"]
-        steps:
-          - name: Checkout Repo
-            uses: actions/checkout@v2
-          - name: Slack Request
-            run: echo "Execute Slack Deploy Request script"
-          - name: Email Request
-            run: echo "Execute Email Deploy Request script"
-          - name: Hub Request
-            run: echo "Execute Hub Deploy Request script"
+        - name: Slack Request
+          run: echo "Execute Slack Deploy Request script"
+        - name: Email Request
+          run: echo "Execute Email Deploy Request script"
+        - name: Hub Request
+          run: echo "Execute Hub Deploy Request script"

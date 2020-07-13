@@ -158,7 +158,7 @@ jobs:
     name: Deploy Request
     runs-on: ubuntu-latest
     env:
-      DISPATCH_URL: /repos/${{ env.GH_REPOSITORY }}/actions/workflows/php-deploy-workflow.yml/dispatches
+      DISPATCH_URL: /repos/${{ github.repository }}/actions/workflows/php-deploy-workflow.yml/dispatches
       BODY: '{"ref":"${{ env.GH_REF }}", "is_approved":"1"}'
       needs: ["php_test"]
     steps:

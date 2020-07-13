@@ -157,10 +157,7 @@ jobs:
   php_deploy_request:
     name: Deploy Request
     runs-on: ubuntu-latest
-    env:
-      DISPATCH_URL: /repos/${{ github.repository }}/actions/workflows/php-deploy-workflow.yml/dispatches
-      BODY: '{"ref":"${{ env.GH_REF }}", "is_approved":"1"}'
-      needs: ["php_test"]
+    needs: ["php_test"]
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2

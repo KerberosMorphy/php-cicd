@@ -161,12 +161,12 @@ jobs:
       DISPATCH_URL: /repos/${{ env.GH_REPOSITORY }}/actions/workflows/php-deploy-workflow.yml/dispatches
       BODY: '{"ref":"${{ env.GH_REF }}", "is_approved":"1"}'
       needs: ["php_test"]
-      steps:
-        - name: Checkout Repo
-          uses: actions/checkout@v2
-        - name: Slack Request
-          run: echo "Execute Slack Deploy Request script"
-        - name: Email Request
-          run: echo "Execute Email Deploy Request script"
-        - name: Hub Request
-          run: echo "Execute Hub Deploy Request script"
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Slack Request
+        run: echo "Execute Slack Deploy Request script"
+      - name: Email Request
+        run: echo "Execute Email Deploy Request script"
+      - name: Hub Request
+        run: echo "Execute Hub Deploy Request script"

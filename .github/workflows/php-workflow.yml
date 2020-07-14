@@ -3,7 +3,8 @@ name: PHP-CICD
 on:
   push:
     branches:
-      - twit
+      - master
+      - production
 
 env:
   DOCKER_REGISTRY: docker.io # Replace by "docker.pkg.github.com" for github registry

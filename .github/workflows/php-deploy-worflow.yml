@@ -18,7 +18,7 @@ jobs:
         run: |
           echo "Deploy have been approved and will start."
       - name: Deploy Denied
-        if: ((!github.event.inputs.is_approved))
+        if: ((github.event.inputs.is_approved == 0))
         run: |
           echo "Deploy have been denied."
       - name: Deploy Failure Handler

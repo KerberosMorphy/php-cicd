@@ -110,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DISPATCH_URL: https://api.github.com/repos/${{ github.repository }}/actions/workflows/php-deploy-workflow.yml/dispatches
-      BODY: '{"ref":"master", "inputs": {"is_approved":"1"}}'
+      BODY: '{"ref":"master", "inputs": {"is_approved":"0"}}'
     needs: ["php_test"]
     steps:
       - name: Checkout Repo

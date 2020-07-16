@@ -11,7 +11,7 @@ env:
   DOCKER_REGISTRY: docker.io # Replace by "docker.pkg.github.com" for github registry
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # Replace by ${{ github.actor }} for github registry
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Replace by ${{ github.token }} for github registry
-  PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-new # Replace by ${{ github.repository }}/gh-php for github registry
+  PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php # Replace by ${{ github.repository }}/gh-php for github registry
   PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test # Replace by ${{ github.repository }}/gh-php-test for github registry
 
 jobs:
@@ -58,7 +58,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           image: ${{ env.PHP_TEST_IMAGE }}:latest
       - name: Publish PHP Test Image
-        if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !((steps.is_php_test_image_exist.outputs.image_exist))
+        if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !((steps.is_php_test_image_exist.outputs.image_exist)) || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
         uses: docker/build-push-action@v1.1.0
         with:
           name: ${{ env.PHP_TEST_IMAGE }}
@@ -109,8 +109,8 @@ jobs:
     name: Deploy Request
     runs-on: ubuntu-latest
     env:
-      DISPATCH_URL: /repos/${{ github.repository }}/actions/workflows/php-deploy-workflow.yml/dispatches
-      BODY: '{"ref":"${{ github.ref }}", "is_approved":"1"}'
+      DISPATCH_URL: https://api.github.com/repos/${{ github.repository }}/actions/workflows/php-deploy-workflow.yml/dispatches
+      BODY: '{"ref":"master", "inputs": {"is_approved":"1"}}'
     needs: ["php_test"]
     steps:
       - name: Checkout Repo

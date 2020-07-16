@@ -13,8 +13,6 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
       - name: Deploy Approved
         if: ((github.event.inputs.is_approved))
         run: |
@@ -23,3 +21,8 @@ jobs:
         if: ((!github.event.inputs.is_approved))
         run: |
           echo "Deploy have been denied."
+      - name: Deploy Failure Handler
+        if: failure()
+        run: |
+          chmod +x ./scripts/on_deploy_failure.sh
+          sh ./scripts/on_deploy_failure.sh

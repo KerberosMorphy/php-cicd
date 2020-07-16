@@ -3,14 +3,15 @@ name: PHP-CICD
 on:
   push:
     branches:
-      - master
-      - production
+      - "master"
+      - "production"
+      - "release/*"
 
 env:
   DOCKER_REGISTRY: docker.io # Replace by "docker.pkg.github.com" for github registry
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # Replace by ${{ github.actor }} for github registry
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Replace by ${{ github.token }} for github registry
-  PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php # Replace by ${{ github.repository }}/gh-php for github registry
+  PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-new # Replace by ${{ github.repository }}/gh-php for github registry
   PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test # Replace by ${{ github.repository }}/gh-php-test for github registry
 
 jobs:

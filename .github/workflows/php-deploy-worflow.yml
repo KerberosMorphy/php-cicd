@@ -14,11 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy Approved
-        if: ((github.event.inputs.is_approved != "0"))
+        if: ((github.event.inputs.is_approved != 0))
         run: |
           echo "Deploy have been approved and will start."
       - name: Deploy Denied
-        if: ((github.event.inputs.is_approved == "0"))
+        if: ((github.event.inputs.is_approved == 0))
         run: |
           echo "Deploy have been denied."
       - name: Deploy Failure Handler

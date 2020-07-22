@@ -34,7 +34,9 @@ jobs:
           BUILD_STATUS: "PASS"
           TEST_STATUS: "PASS"
           DEPLOY_STATUS: "PASS"
-        run: python3 scripts/slack_chatops_post.py
+        run: |
+          pip3 install slackclient
+          python3 scripts/slack_chatops_post.py
       - name: Deploy Failure Handler
         if: failure()
         env:
@@ -45,4 +47,6 @@ jobs:
           BUILD_STATUS: "PASS"
           TEST_STATUS: "PASS"
           DEPLOY_STATUS: "FAIL"
-        run: python3 scripts/slack_chatops_post.py
+        run: |
+          pip3 install slackclient
+          python3 scripts/slack_chatops_post.py

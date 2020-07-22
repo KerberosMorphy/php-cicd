@@ -81,19 +81,20 @@ jobs:
           PROJECT_NAME: "PHP-CICD"
           ISSUE_ID: "5476"
           BUILD_STATUS: "FAIL"
-        run: python3 scripts/slack_chatops_post.py
+        run: |
+          pip3 install slackclient
+          python3 scripts/slack_chatops_post.py
 
   php_test:
     name: Tests
     runs-on: ubuntu-latest
     needs: ["php_build"]
-    container:
+    container: docker://docker.io/kerberosmorphy/gh-php-test:latest
       # Variable not working in container image name
       # https://github.community/t/how-to-use-env-with-container-image/17252
       # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
       # Github PKG Docker not working in container section
       # image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
-      image: docker://docker.io/kerberosmorphy/gh-php-test:latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
@@ -114,7 +115,9 @@ jobs:
           ISSUE_ID: "5476"
           BUILD_STATUS: "PASS"
           TEST_STATUS: "FAIL"
-        run: python3 scripts/slack_chatops_post.py
+        run: |
+          pip3 install slackclient
+          python3 scripts/slack_chatops_post.py
 
   php_deploy_request:
     name: Deploy Request
@@ -132,7 +135,9 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Slack Request
-        run: python3 scripts/slack_chatops_post.py
+        run: |
+          pip3 install slackclient
+          python3 scripts/slack_chatops_post.py
       - name: Email Request
         run: echo "Execute Email Deploy Request script"
       - name: Hub Request

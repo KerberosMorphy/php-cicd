@@ -11,6 +11,11 @@ from slack.web.classes.messages import Message
 
 pp = PrettyPrinter(indent=4)
 
+def header_builder(title: str) -> SectionBlock:
+    fields: List[MarkdownTextObject] = []
+    fields.append(MarkdownTextObject(text=f"*{title}*"))
+    return SectionBlock(fields=fields)
+
 def details_builder(project: str, project_url:str, user: str, branch: str, issue_id: str, issue_url: str, run_id: str, run_url: str) -> SectionBlock:
     fields: List[MarkdownTextObject] = []
     fields.append(MarkdownTextObject(text=f"*Project Repo:*\n<{project_url}|{project}>"))
@@ -18,23 +23,21 @@ def details_builder(project: str, project_url:str, user: str, branch: str, issue
     fields.append(MarkdownTextObject(text=f"*Workflow:*\n<{run_url}|{run_id}>"))
     fields.append(MarkdownTextObject(text=f"*Ref:*\n{branch}"))
     fields.append(MarkdownTextObject(text=f"*From:*\n{user}"))
-    image_block: ImageBlock = ImageBlock(image_url="https://avatars0.githubusercontent.com/u/44036562", alt_text="GitHub Action")
-    return SectionBlock(fields=fields, accessory=image_block)
+    return SectionBlock(fields=fields)
 
 def status_builder(build_status: Optional[str] = None, test_status: Optional[str] = None, deploy_status: Optional[str] = None) -> SectionBlock:
     fields: List[MarkdownTextObject] = []
+    text: str = ""
     if build_status:
-        text = "*Build*: "
-        text += ":heavy_check_mark:" if build_status == "PASS" else ":x:"
-        fields.append(MarkdownTextObject(text=text))
+        text += "*Build*: "
+        text += ":heavy_check_mark:\n" if build_status == "PASS" else ":x:\n"
     if test_status:
-        text = "*Tests*: "
-        text += ":heavy_check_mark:" if test_status == "PASS" else ":x:"
-        fields.append(MarkdownTextObject(text=text))
+        text += "*Tests*: "
+        text += ":heavy_check_mark:\n" if test_status == "PASS" else ":x:\n"
     if deploy_status:
-        text = "*Deploy*: "
-        text += ":heavy_check_mark:" if deploy_status == "PASS" else ":x:"
-        fields.append(MarkdownTextObject(text=text))
+        text += "*Deploy*: "
+        text += ":heavy_check_mark:\n" if deploy_status == "PASS" else ":x:\n"
+    fields.append(MarkdownTextObject(text=text))
     return SectionBlock(fields=fields)
 
 def message_builder(title: str, blocks: List[Union[ActionsBlock, SectionBlock]]) -> Message:
@@ -48,7 +51,7 @@ def buttons_builder(message_type: str, repository: str, branch: str, run_id: str
     elif message_type == "REQUEST":
         approve_payload: Dict = { "ref": branch, "inputs": { "is_approved": "1" } }
         approve_value: Dict = { "url_call": f"/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(approve_payload)}
-        elements.append(ButtonElement(text="Approuve", action_id="approval", value=dumps(approve_value), style="primary"))
+        elements.append(ButtonElement(text="Approve", action_id="approval", value=dumps(approve_value), style="primary"))
         deny_payload: Dict = { "ref": branch, "inputs": { "is_approved": "0" } }
         deny_value: Dict = { "url_call": f"/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(deny_payload)}
         elements.append(ButtonElement(text="Deny", action_id="denial", value=dumps(deny_value), style="danger"))
@@ -92,6 +95,8 @@ def main():
 
     blocks: List[Union[ActionsBlock,SectionBlock]] = []
 
+    # Build project information section
+    blocks.append(header_builder(title=title))
     # Build project information section
     blocks.append(details_builder(project=project, project_url=project_url, user=user, branch=branch, issue_id=issue_id, issue_url=issue_url, run_id=run_id, run_url=run_url))
     # Build workflow information section

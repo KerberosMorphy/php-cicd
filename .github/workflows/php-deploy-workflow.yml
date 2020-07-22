@@ -8,6 +8,10 @@ on:
         required: true
         default: '0'
 
+env:
+  SLACK_CHANNEL: "#test-bot" # Slack Channel name or ID
+  SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }} # Slack API Token
+          
 jobs:
   php_deploy:
     name: Deploy
@@ -21,8 +25,24 @@ jobs:
         if: ((github.event.inputs.is_approved == 0))
         run: |
           echo "Deploy have been denied."
+      - name: Deploy Status Message
+        if: failure()
+        env:
+          TITLE: "GitHub Deploy Success"
+          PROJECT_NAME: "PHP-CICD"
+          ISSUE_ID: "5476"
+          BUILD_STATUS: "PASS"
+          TEST_STATUS: "PASS"
+          DEPLOY_STATUS: "PASS"
+        run: python3 scripts/slack_chatops_post.py
       - name: Deploy Failure Handler
         if: failure()
-        run: |
-          chmod +x ./scripts/on_deploy_failure.sh
-          sh ./scripts/on_deploy_failure.sh
+        env:
+          MESSAGE_TYPE: "ERROR"
+          TITLE: "GitHub Workflow Error"
+          PROJECT_NAME: "PHP-CICD"
+          ISSUE_ID: "5476"
+          BUILD_STATUS: "PASS"
+          TEST_STATUS: "PASS"
+          DEPLOY_STATUS: "FAIL"
+        run: python3 scripts/slack_chatops_post.py

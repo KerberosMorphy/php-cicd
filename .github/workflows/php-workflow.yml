@@ -13,6 +13,8 @@ env:
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Replace by ${{ github.token }} for github registry
   PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php # Replace by ${{ github.repository }}/gh-php for github registry
   PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test # Replace by ${{ github.repository }}/gh-php-test for github registry
+  SLACK_CHANNEL: "#test-bot" # Slack Channel name or ID
+  SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }} # Slack API Token
 
 jobs:
   php_build:
@@ -73,9 +75,13 @@ jobs:
           tags: latest
       - name: Build Failure Handler
         if: failure()
-        run: |
-          chmod +x ./scripts/on_build_failure.sh
-          sh ./scripts/on_build_failure.sh
+        env:
+          MESSAGE_TYPE: "ERROR"
+          TITLE: "GitHub Workflow Error"
+          PROJECT_NAME: "PHP-CICD"
+          ISSUE_ID: "5476"
+          BUILD_STATUS: "FAIL"
+        run: python3 scripts/slack_chatops_post.py
 
   php_test:
     name: Tests
@@ -101,22 +107,32 @@ jobs:
         run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
       - name: Test Failure Handler
         if: failure()
-        run: |
-          chmod +x ./scripts/on_test_failure.sh
-          sh ./scripts/on_test_failure.sh
+        env:
+          MESSAGE_TYPE: "ERROR"
+          TITLE: "GitHub Workflow Error"
+          PROJECT_NAME: "PHP-CICD"
+          ISSUE_ID: "5476"
+          BUILD_STATUS: "PASS"
+          TEST_STATUS: "FAIL"
+        run: python3 scripts/slack_chatops_post.py
 
   php_deploy_request:
     name: Deploy Request
     runs-on: ubuntu-latest
     env:
-      DISPATCH_URL: https://api.github.com/repos/${{ github.repository }}/actions/workflows/php-deploy-workflow.yml/dispatches
-      BODY: '{"ref":"master", "inputs": {"is_approved":"0"}}'
+      MESSAGE_TYPE: "REQUEST"
+      TITLE: "GitHub Deploy Request"
+      PROJECT_NAME: "PHP-CICD"
+      ISSUE_ID: "5476"
+      BUILD_STATUS: "PASS"
+      TEST_STATUS: "PASS"
+      WORKFLOW: "php-deploy-workflow.yml"
     needs: ["php_test"]
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Slack Request
-        run: echo "Execute Slack Deploy Request script"
+        run: python3 scripts/slack_chatops_post.py
       - name: Email Request
         run: echo "Execute Email Deploy Request script"
       - name: Hub Request

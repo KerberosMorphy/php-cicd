@@ -8,7 +8,7 @@ RUN set -xe
 RUN apt-get update -yqq
 RUN apt-get install git python3 -yqq
 
-# Install phpunit, the tool that we will use for testing
+# Install phpunit, the tool that we will use for testing.
 RUN curl --location --output /usr/local/bin/phpunit https://phar.phpunit.de/phpunit.phar
 RUN chmod +x /usr/local/bin/phpunit
 

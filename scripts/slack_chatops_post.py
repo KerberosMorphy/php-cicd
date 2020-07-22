@@ -23,7 +23,11 @@ def details_builder(project: str, project_url:str, user: str, ref: str, issue_id
     fields.append(MarkdownTextObject(text=f"*Workflow:*\n<{run_url}|{run_id}>"))
     fields.append(MarkdownTextObject(text=f"*Ref:*\n{ref}"))
     fields.append(MarkdownTextObject(text=f"*From:*\n{user}"))
-    return SectionBlock(fields=fields)
+    image_block: ImageBlock = ImageBlock(image_url="https://avatars0.githubusercontent.com/u/44036562", alt_text="GitHub Worflow")
+    pp.pprint(image_block.to_dict())
+    block = SectionBlock(fields=fields, accessory=image_block)
+    pp.pprint(block.to_dict())
+    return block
 
 def status_builder(build_status: Optional[str] = None, test_status: Optional[str] = None, deploy_status: Optional[str] = None) -> SectionBlock:
     fields: List[MarkdownTextObject] = []

@@ -1,6 +1,6 @@
 from os import environ
 from json import dumps
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 
 from slack.web.client import WebClient
 from slack.web.classes.blocks import ImageBlock, SectionBlock, ActionsBlock
@@ -8,9 +8,10 @@ from slack.web.classes.objects import MarkdownTextObject
 from slack.web.classes.elements import ButtonElement
 from slack.web.classes.messages import Message
 
-def details_builder(project: str, project_url:str, user: str, branch: str, issue_id: str, issue_url: str) -> SectionBlock:
+def details_builder(project: str, project_url:str, user: str, branch: str, issue_id: str, issue_url: str, run_id: str, run_url: str) -> SectionBlock:
     project_field: MarkdownTextObject = MarkdownTextObject(text=f"*Project Repo:*\n<{project_url}|{project}>")
     project_field: MarkdownTextObject = MarkdownTextObject(text=f"*Issue ID:*\n<{issue_url}|#{issue_id}>")
+    branch_field: MarkdownTextObject = MarkdownTextObject(text=f"*Workflow:*\n<{run_url}|{run_id}>")
     branch_field: MarkdownTextObject = MarkdownTextObject(text=f"*Ref:*\n{branch}")
     from_user_field: MarkdownTextObject = MarkdownTextObject(text=f"*From:*\n{user}")
     image_accessory: ImageBlock = ImageBlock(image_url="https://avatars0.githubusercontent.com/u/44036562", alt_text="GitHub Action")
@@ -32,7 +33,7 @@ def status_builder(build_status: Optional[str] = None, test_status: Optional[str
         fields.append(MarkdownTextObject(text=text))
     return SectionBlock(fields=fields)
 
-def message_builder(title: str, blocks: List[ActionsBlock|SectionBlock]) -> Message:
+def message_builder(title: str, blocks: List[Union[ActionsBlock, SectionBlock]]) -> Message:
     return Message(text=f"*{title}*", blocks=blocks)
 
 def buttons_builder(message_type: str, repository: str, branch: str, run_id: str, workflow: Optional[str] = None) -> ActionsBlock:
@@ -62,6 +63,8 @@ def main():
     workflow: Optional[str] = environ.get('WORKFLOW', None)
     # Optional Workflow ID to re-run
     run_id: str = environ['GITHUB_RUN_ID']
+    # Optional Workflow ID to re-run
+    run_url: str = f"https://github.com/{repository}/actions/runs{run_id}"
     # Branch/ref name
     branch: str = environ.get('GITHUB_REF', "")
     # Message type, "ERROR" or "REQUEST"
@@ -83,10 +86,10 @@ def main():
     # Optional Deploy status, "PASS" or "FAIL"
     deploy_status: Optional[str] = environ.get('DEPLOY_STATUS', None)
 
-    blocks: List[ActionsBlock|SectionBlock] = []
+    blocks: List[Union[ActionsBlock,SectionBlock]] = []
 
     # Build project information section
-    blocks.append(details_builder(project=project, project_url=project_url, user=user, branch=branch, issue_id=issue_id, issue_url=issue_url))
+    blocks.append(details_builder(project=project, project_url=project_url, user=user, branch=branch, issue_id=issue_id, issue_url=issue_url, run_id=run_id, run_url=run_url))
     # Build workflow information section
     blocks.append(status_builder(build_status=build_status, test_status=test_status, deploy_status=deploy_status))
     # Build interactive section if needed

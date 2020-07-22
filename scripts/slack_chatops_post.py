@@ -1,5 +1,6 @@
 from os import environ
 from json import dumps
+from pprint import PrettyPrinter
 from typing import Optional, List, Dict, Union
 
 from slack.web.client import WebClient
@@ -8,14 +9,17 @@ from slack.web.classes.objects import MarkdownTextObject
 from slack.web.classes.elements import ButtonElement
 from slack.web.classes.messages import Message
 
+pp = PrettyPrinter(indent=4)
+
 def details_builder(project: str, project_url:str, user: str, branch: str, issue_id: str, issue_url: str, run_id: str, run_url: str) -> SectionBlock:
-    project_field: MarkdownTextObject = MarkdownTextObject(text=f"*Project Repo:*\n<{project_url}|{project}>")
-    project_field: MarkdownTextObject = MarkdownTextObject(text=f"*Issue ID:*\n<{issue_url}|#{issue_id}>")
-    branch_field: MarkdownTextObject = MarkdownTextObject(text=f"*Workflow:*\n<{run_url}|{run_id}>")
-    branch_field: MarkdownTextObject = MarkdownTextObject(text=f"*Ref:*\n{branch}")
-    from_user_field: MarkdownTextObject = MarkdownTextObject(text=f"*From:*\n{user}")
-    image_accessory: ImageBlock = ImageBlock(image_url="https://avatars0.githubusercontent.com/u/44036562", alt_text="GitHub Action")
-    return SectionBlock(fields=[project_field, branch_field, from_user_field], accessory=image_accessory)
+    fields: List[MarkdownTextObject] = []
+    fields.append(MarkdownTextObject(text=f"*Project Repo:*\n<{project_url}|{project}>"))
+    fields.append(MarkdownTextObject(text=f"*Issue ID:*\n<{issue_url}|#{issue_id}>"))
+    fields.append(MarkdownTextObject(text=f"*Workflow:*\n<{run_url}|{run_id}>"))
+    fields.append(MarkdownTextObject(text=f"*Ref:*\n{branch}"))
+    fields.append(MarkdownTextObject(text=f"*From:*\n{user}"))
+    image_block: ImageBlock = ImageBlock(image_url="https://avatars0.githubusercontent.com/u/44036562", alt_text="GitHub Action")
+    return SectionBlock(fields=fields, accessory=image_block)
 
 def status_builder(build_status: Optional[str] = None, test_status: Optional[str] = None, deploy_status: Optional[str] = None) -> SectionBlock:
     fields: List[MarkdownTextObject] = []
@@ -97,6 +101,7 @@ def main():
         blocks.append(buttons_builder(message_type=message_type, repository=repository, branch=branch, run_id=run_id, workflow=workflow))
     # Build message
     message: Dict = message_builder(title=title, blocks=blocks).to_dict()
+    pp.pprint(message)
     # Sending message
     client: WebClient = WebClient(token=slack_api_token)
     client.chat_postMessage(channel=slack_channel, **message)

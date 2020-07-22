@@ -62,6 +62,8 @@ def main():
     slack_api_token: str = environ['SLACK_API_TOKEN']
     # Slack Channel name or ID
     slack_channel: str = environ['SLACK_CHANNEL']
+    # Optional Slack Message Timestamp
+    slack_timestamp: Optional[str] = environ.get('SLACK_TIMESTAMP', None)
     # App or User triggering the action
     user: str = environ['GITHUB_ACTOR']
     # Repository name user/project
@@ -70,8 +72,8 @@ def main():
     workflow: Optional[str] = environ.get('WORKFLOW', None)
     # Optional Workflow ID to re-run
     run_id: str = environ['GITHUB_RUN_ID']
-    # Optional Workflow ID to re-run
-    run_url: str = f"https://github.com/{repository}/actions/runs{run_id}"
+    # Workflow url for re-run
+    run_url: str = f"https://github.com/{repository}/actions/runs/{run_id}"
     # Branch/ref name
     branch: str = environ.get('GITHUB_REF', "")
     # Message type, "ERROR" or "REQUEST"
@@ -95,7 +97,7 @@ def main():
 
     blocks: List[Union[ActionsBlock,SectionBlock]] = []
 
-    # Build project information section
+    # Build header title section
     blocks.append(header_builder(title=title))
     # Build project information section
     blocks.append(details_builder(project=project, project_url=project_url, user=user, branch=branch, issue_id=issue_id, issue_url=issue_url, run_id=run_id, run_url=run_url))
@@ -109,7 +111,12 @@ def main():
     pp.pprint(message)
     # Sending message
     client: WebClient = WebClient(token=slack_api_token)
-    client.chat_postMessage(channel=slack_channel, **message)
+    if slack_timestamp:
+        # Will alterate last Slack Message
+        client.chat_update(channel=slack_channel, ts=slack_timestamp, **message)
+    else:
+        # Will send new Slack Message
+        client.chat_postMessage(channel=slack_channel, **message)
 
 if __name__ == "__main__":
     main()

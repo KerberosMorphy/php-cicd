@@ -16,12 +16,12 @@ def header_builder(title: str) -> SectionBlock:
     fields.append(MarkdownTextObject(text=f"*{title}*"))
     return SectionBlock(fields=fields)
 
-def details_builder(project: str, project_url:str, user: str, branch: str, issue_id: str, issue_url: str, run_id: str, run_url: str) -> SectionBlock:
+def details_builder(project: str, project_url:str, user: str, ref: str, issue_id: str, issue_url: str, run_id: str, run_url: str) -> SectionBlock:
     fields: List[MarkdownTextObject] = []
     fields.append(MarkdownTextObject(text=f"*Project Repo:*\n<{project_url}|{project}>"))
     fields.append(MarkdownTextObject(text=f"*Issue ID:*\n<{issue_url}|#{issue_id}>"))
     fields.append(MarkdownTextObject(text=f"*Workflow:*\n<{run_url}|{run_id}>"))
-    fields.append(MarkdownTextObject(text=f"*Ref:*\n{branch}"))
+    fields.append(MarkdownTextObject(text=f"*Ref:*\n{ref}"))
     fields.append(MarkdownTextObject(text=f"*From:*\n{user}"))
     return SectionBlock(fields=fields)
 
@@ -43,16 +43,16 @@ def status_builder(build_status: Optional[str] = None, test_status: Optional[str
 def message_builder(title: str, blocks: List[Union[ActionsBlock, SectionBlock]]) -> Message:
     return Message(text=f"*{title}*", blocks=blocks)
 
-def buttons_builder(message_type: str, repository: str, branch: str, run_id: str, workflow: Optional[str] = None) -> ActionsBlock:
+def buttons_builder(message_type: str, repository: str, ref: str, run_id: str, workflow: Optional[str] = None) -> ActionsBlock:
     elements: List[ButtonElement] = []
     if message_type == "ERROR":
         retry_value: Dict = { "url_call": f"https://api.github.com/repos/{repository}/actions/runs/{run_id}/rerun" }
         elements.append(ButtonElement(text="Retry", action_id="retry", value=dumps(retry_value), style="default"))
     elif message_type == "REQUEST":
-        approve_payload: Dict = { "ref": branch, "inputs": { "is_approved": "1" } }
+        approve_payload: Dict = { "ref": ref, "inputs": { "is_approved": "1" } }
         approve_value: Dict = { "url_call": f"https://api.github.com/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(approve_payload)}
         elements.append(ButtonElement(text="Approve", action_id="approval", value=dumps(approve_value), style="primary"))
-        deny_payload: Dict = { "ref": branch, "inputs": { "is_approved": "0" } }
+        deny_payload: Dict = { "ref": ref, "inputs": { "is_approved": "0" } }
         deny_value: Dict = { "url_call": f"https://api.github.com/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(deny_payload)}
         elements.append(ButtonElement(text="Deny", action_id="denial", value=dumps(deny_value), style="danger"))
     return ActionsBlock(elements=elements)
@@ -74,8 +74,8 @@ def main():
     run_id: str = environ['GITHUB_RUN_ID']
     # Workflow url for re-run
     run_url: str = f"https://github.com/{repository}/actions/runs/{run_id}"
-    # Branch/ref name
-    branch: str = environ.get('GITHUB_REF', "")
+    # Ref (SHA)
+    ref: str = environ.get('GITHUB_SHA', "")
     # Message type, "ERROR" or "REQUEST"
     message_type: str = environ['MESSAGE_TYPE']
     # Message title
@@ -83,7 +83,7 @@ def main():
     # Project name
     project: str = environ['PROJECT_NAME']
     # GitHub project URL
-    project_url: str = f"{environ['GITHUB_SERVER_URL']}/{repository}/tree/{branch}"
+    project_url: str = f"{environ['GITHUB_SERVER_URL']}/{repository}/tree/{ref}"
     # Hub Issue ID
     issue_id: str = environ['ISSUE_ID']
     # Hub Issue URL
@@ -100,12 +100,12 @@ def main():
     # Build header title section
     blocks.append(header_builder(title=title))
     # Build project information section
-    blocks.append(details_builder(project=project, project_url=project_url, user=user, branch=branch, issue_id=issue_id, issue_url=issue_url, run_id=run_id, run_url=run_url))
+    blocks.append(details_builder(project=project, project_url=project_url, user=user, ref=ref, issue_id=issue_id, issue_url=issue_url, run_id=run_id, run_url=run_url))
     # Build workflow information section
     blocks.append(status_builder(build_status=build_status, test_status=test_status, deploy_status=deploy_status))
     # Build interactive section if needed
     if message_type in ['ERROR', 'REQUEST']:
-        blocks.append(buttons_builder(message_type=message_type, repository=repository, branch=branch, run_id=run_id, workflow=workflow))
+        blocks.append(buttons_builder(message_type=message_type, repository=repository, ref=ref, run_id=run_id, workflow=workflow))
     # Build message
     message: Dict = message_builder(title=title, blocks=blocks).to_dict()
     pp.pprint(message)

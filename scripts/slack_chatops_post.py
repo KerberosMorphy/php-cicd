@@ -4,9 +4,9 @@ from pprint import PrettyPrinter
 from typing import Optional, List, Dict, Union
 
 from slack.web.client import WebClient
-from slack.web.classes.blocks import ImageBlock, SectionBlock, ActionsBlock
+from slack.web.classes.blocks import SectionBlock, ActionsBlock
 from slack.web.classes.objects import MarkdownTextObject
-from slack.web.classes.elements import ButtonElement
+from slack.web.classes.elements import ButtonElement, ImageElement
 from slack.web.classes.messages import Message
 
 pp = PrettyPrinter(indent=4)
@@ -23,11 +23,8 @@ def details_builder(project: str, project_url:str, user: str, ref: str, issue_id
     fields.append(MarkdownTextObject(text=f"*Workflow:*\n<{run_url}|{run_id}>"))
     fields.append(MarkdownTextObject(text=f"*Ref:*\n{ref}"))
     fields.append(MarkdownTextObject(text=f"*From:*\n{user}"))
-    image_block: ImageBlock = ImageBlock(image_url="https://avatars0.githubusercontent.com/u/44036562", alt_text="GitHub Worflow")
-    pp.pprint(image_block.to_dict())
-    block = SectionBlock(fields=fields, accessory=image_block)
-    pp.pprint(block.to_dict())
-    return block
+    image_element: ImageElement = ImageElement(image_url="https://avatars0.githubusercontent.com/u/44036562", alt_text="GitHub Worflow")
+    return SectionBlock(fields=fields, accessory=image_element)
 
 def status_builder(build_status: Optional[str] = None, test_status: Optional[str] = None, deploy_status: Optional[str] = None) -> SectionBlock:
     fields: List[MarkdownTextObject] = []

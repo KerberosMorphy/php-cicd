@@ -1,3 +1,3 @@
 FROM php:7.4
 
-# RUN install some dependencies...
+# RUN install some dependencies.

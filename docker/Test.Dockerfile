@@ -15,6 +15,6 @@ RUN chmod +x /usr/local/bin/phpunit
 # Install mysql driver
 # Here you can install any other extension that you need
 # `docker-php-ext-install` is a script provided by the official PHP Docker image
-# that you can use to easily install extensions. 
+# that you can use to easily install extensions.
 # For more information read the documentation at https://hub.docker.com/_/php
 RUN docker-php-ext-install pdo_mysql

@@ -75,8 +75,8 @@ def main():
     run_id: str = environ['GITHUB_RUN_ID']
     # Workflow url for re-run
     run_url: str = f"https://github.com/{repository}/actions/runs/{run_id}"
-    # Ref (SHA)
-    ref: str = environ.get('GITHUB_SHA', "")
+    # Branch ref
+    ref: str = environ.get('GITHUB_REF', "")
     # Message type, "ERROR" or "REQUEST"
     message_type: str = environ['MESSAGE_TYPE']
     # Message title

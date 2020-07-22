@@ -48,7 +48,7 @@ def buttons_builder(message_type: str, repository: str, ref: str, run_id: str, w
     elements: List[ButtonElement] = []
     if message_type == "ERROR":
         retry_value: Dict = { "url_call": f"https://api.github.com/repos/{repository}/actions/runs/{run_id}/rerun" }
-        elements.append(ButtonElement(text="Retry", action_id="retry", value=dumps(retry_value), style="default"))
+        elements.append(ButtonElement(text="Retry", action_id="retry", value=dumps(retry_value)))
     elif message_type == "REQUEST":
         approve_payload: Dict = { "ref": ref, "inputs": { "is_approved": "1" } }
         approve_value: Dict = { "url_call": f"https://api.github.com/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(approve_payload)}

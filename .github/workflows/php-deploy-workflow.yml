@@ -10,6 +10,9 @@ on:
       timestamp:
         description: 'Slack message timestamp'
         required: false
+      channel:
+        description: 'Slack message channel'
+        required: false
 
 env:
   SLACK_CHANNEL: "#test-bot" # Slack Channel name or ID

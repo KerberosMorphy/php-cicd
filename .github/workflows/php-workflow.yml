@@ -115,8 +115,8 @@ jobs:
           BUILD_STATUS: "PASS"
           TEST_STATUS: "FAIL"
         run: |
-          pip3 install -U pip setuptools
-          pip3 install slackclient
+          pip install -U pip setuptools
+          pip install slackclient
           python3 scripts/slack_chatops_post.py
 
   php_deploy_request:

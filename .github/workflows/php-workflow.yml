@@ -13,7 +13,7 @@ env:
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Replace by ${{ github.token }} for github registry
   PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php # Replace by ${{ github.repository }}/gh-php for github registry
   PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test # Replace by ${{ github.repository }}/gh-php-test for github registry
-  SLACK_CHANNEL: "#test-bot" # Slack Channel name or ID
+  SLACK_CHANNEL: "#ci-cd" # Slack Channel name or ID
   SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }} # Slack API Token
   PROJECT_NAME: "PHP-CICD"
   ISSUE_ID: "5476"
@@ -62,7 +62,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           image: ${{ env.PHP_TEST_IMAGE }}:latest
       - name: Publish PHP Test Image
-        # if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
+        if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
         uses: docker/build-push-action@v1.1.0
         with:
           name: ${{ env.PHP_TEST_IMAGE }}

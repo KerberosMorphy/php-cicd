@@ -62,7 +62,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           image: ${{ env.PHP_TEST_IMAGE }}:latest
       - name: Publish PHP Test Image
-        if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
+        # if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
         uses: docker/build-push-action@v1.1.0
         with:
           name: ${{ env.PHP_TEST_IMAGE }}
@@ -115,8 +115,8 @@ jobs:
           BUILD_STATUS: "PASS"
           TEST_STATUS: "FAIL"
         run: |
-          pip install -U pip setuptools
-          pip install slackclient
+          pip3 install -U pip setuptools
+          pip3 install slackclient
           python3 scripts/slack_chatops_post.py
 
   php_deploy_request:

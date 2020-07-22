@@ -78,7 +78,7 @@ def main():
     # Branch ref
     ref: str = environ.get('GITHUB_REF', "")
     # Message type, "ERROR" or "REQUEST"
-    message_type: str = environ['MESSAGE_TYPE']
+    message_type: Optional[str] = environ.get('MESSAGE_TYPE', None)
     # Message title
     title: str = environ['TITLE']
     # Project name

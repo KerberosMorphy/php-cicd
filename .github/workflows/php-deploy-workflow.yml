@@ -38,6 +38,7 @@ jobs:
       - name: Deploy Status Message
         env:
           TITLE: "GitHub Deploy Success"
+          MESSAGE_TYPE: "STATUS"
           DEPLOY_STATUS: "PASS"
         run: |
           pip3 install -U pip setuptools

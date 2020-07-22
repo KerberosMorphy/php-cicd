@@ -46,14 +46,14 @@ def message_builder(title: str, blocks: List[Union[ActionsBlock, SectionBlock]])
 def buttons_builder(message_type: str, repository: str, branch: str, run_id: str, workflow: Optional[str] = None) -> ActionsBlock:
     elements: List[ButtonElement] = []
     if message_type == "ERROR":
-        retry_value: Dict = { "url_call": f"/repos/{repository}/actions/runs/{run_id}/rerun" }
+        retry_value: Dict = { "url_call": f"https://api.github.com/repos/{repository}/actions/runs/{run_id}/rerun" }
         elements.append(ButtonElement(text="Retry", action_id="retry", value=dumps(retry_value), style="default"))
     elif message_type == "REQUEST":
         approve_payload: Dict = { "ref": branch, "inputs": { "is_approved": "1" } }
-        approve_value: Dict = { "url_call": f"/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(approve_payload)}
+        approve_value: Dict = { "url_call": f"https://api.github.com/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(approve_payload)}
         elements.append(ButtonElement(text="Approve", action_id="approval", value=dumps(approve_value), style="primary"))
         deny_payload: Dict = { "ref": branch, "inputs": { "is_approved": "0" } }
-        deny_value: Dict = { "url_call": f"/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(deny_payload)}
+        deny_value: Dict = { "url_call": f"https://api.github.com/repos/{repository}/actions/workflows/{workflow}/dispatches", "payload": dumps(deny_payload)}
         elements.append(ButtonElement(text="Deny", action_id="denial", value=dumps(deny_value), style="danger"))
     return ActionsBlock(elements=elements)
 

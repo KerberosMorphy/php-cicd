@@ -60,7 +60,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           image: ${{ env.PHP_TEST_IMAGE }}:latest
       - name: Publish PHP Test Image
-        if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !((steps.is_php_test_image_exist.outputs.image_exist)) || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
+        if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || (steps.is_php_test_image_exist.outputs.image_exist == "0") || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
         uses: docker/build-push-action@v1.1.0
         with:
           name: ${{ env.PHP_TEST_IMAGE }}

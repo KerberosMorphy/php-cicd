@@ -109,11 +109,11 @@ def main():
         blocks.append(buttons_builder(message_type=message_type, repository=repository, ref=ref, run_id=run_id, workflow=workflow))
     # Build message
     message: Dict = message_builder(title=title, blocks=blocks).to_dict()
-    pp.pprint(message)
     # Sending message
     client: WebClient = WebClient(token=slack_api_token)
     if slack_timestamp:
         # Will alterate last Slack Message
+        print(f"{slack_channel=}, {slack_timestamp=}")
         client.chat_update(channel=slack_channel, ts=slack_timestamp, **message)
     else:
         # Will send new Slack Message

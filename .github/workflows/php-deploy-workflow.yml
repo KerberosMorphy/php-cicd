@@ -15,7 +15,7 @@ on:
         required: false
 
 env:
-  SLACK_CHANNEL: "#test-bot" # Slack Channel name or ID
+  SLACK_CHANNEL: ${{ github.event.inputs.channel }} # Slack Channel name or ID
   SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }} # Slack API Token
   SLACK_TIMESTAMP: ${{ github.event.inputs.timestamp }}
   PROJECT_NAME: "PHP-CICD"

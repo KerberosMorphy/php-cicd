@@ -3,6 +3,7 @@ from json import dumps
 from pprint import PrettyPrinter
 from typing import Optional, List, Dict, Union
 
+from slack.errors import SlackApiError
 from slack.web.client import WebClient
 from slack.web.classes.blocks import SectionBlock, ActionsBlock
 from slack.web.classes.objects import MarkdownTextObject
@@ -42,7 +43,7 @@ def status_builder(build_status: Optional[str] = None, test_status: Optional[str
     return SectionBlock(fields=fields)
 
 def message_builder(title: str, blocks: List[Union[ActionsBlock, SectionBlock]]) -> Message:
-    return Message(text=f"*{title}*", blocks=blocks)
+    return Message(text=f"{title}", blocks=blocks)
 
 def buttons_builder(message_type: str, repository: str, ref: str, run_id: str, workflow: Optional[str] = None) -> ActionsBlock:
     elements: List[ButtonElement] = []
@@ -113,8 +114,11 @@ def main():
     client: WebClient = WebClient(token=slack_api_token)
     if slack_timestamp:
         # Will alterate last Slack Message
-        print(f"{slack_channel=}, {slack_timestamp=}")
-        client.chat_update(channel=slack_channel, ts=slack_timestamp, **message)
+        print(f"{slack_channel}, {slack_timestamp}")
+        try:
+            client.chat_update(channel=slack_channel, ts=slack_timestamp, **message)
+        except SlackApiError:
+            client.chat_postMessage(channel=slack_channel, **message)
     else:
         # Will send new Slack Message
         client.chat_postMessage(channel=slack_channel, **message)

@@ -82,6 +82,7 @@ jobs:
           ISSUE_ID: "5476"
           BUILD_STATUS: "FAIL"
         run: |
+          pip3 install -U pip setuptools
           pip3 install slackclient
           python3 scripts/slack_chatops_post.py
 
@@ -116,6 +117,7 @@ jobs:
           BUILD_STATUS: "PASS"
           TEST_STATUS: "FAIL"
         run: |
+          pip3 install -U pip setuptools
           pip3 install slackclient
           python3 scripts/slack_chatops_post.py
 
@@ -136,6 +138,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Slack Request
         run: |
+          pip3 install -U pip setuptools
           pip3 install slackclient
           python3 scripts/slack_chatops_post.py
       - name: Email Request

@@ -82,7 +82,8 @@ jobs:
           ISSUE_ID: "5476"
           BUILD_STATUS: "FAIL"
         run: |
-          pip3 install -U -r requirements.txt
+          pip3 install -U pip setuptools
+          pip3 install slackclient
           python3 scripts/slack_chatops_post.py
 
   php_test:
@@ -116,7 +117,8 @@ jobs:
           BUILD_STATUS: "PASS"
           TEST_STATUS: "FAIL"
         run: |
-          pip3 install -U -r requirements.txt
+          pip3 install -U pip setuptools
+          pip3 install slackclient
           python3 scripts/slack_chatops_post.py
 
   php_deploy_request:
@@ -136,7 +138,8 @@ jobs:
         uses: actions/checkout@v2
       - name: Slack Request
         run: |
-          pip3 install -U -r requirements.txt
+          pip3 install -U pip setuptools
+          pip3 install slackclient
           python3 scripts/slack_chatops_post.py
       - name: Email Request
         run: echo "Execute Email Deploy Request script"

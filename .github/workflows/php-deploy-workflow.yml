@@ -14,6 +14,11 @@ on:
 env:
   SLACK_CHANNEL: "#test-bot" # Slack Channel name or ID
   SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }} # Slack API Token
+  SLACK_TIMESTAMP: ${{ github.event.inputs.timestamp }}
+  PROJECT_NAME: "PHP-CICD"
+  ISSUE_ID: "5476"
+  BUILD_STATUS: "PASS"
+  TEST_STATUS: "PASS"
           
 jobs:
   php_deploy:
@@ -29,13 +34,8 @@ jobs:
         run: |
           echo "Deploy have been denied."
       - name: Deploy Status Message
-        if: failure()
         env:
           TITLE: "GitHub Deploy Success"
-          PROJECT_NAME: "PHP-CICD"
-          ISSUE_ID: "5476"
-          BUILD_STATUS: "PASS"
-          TEST_STATUS: "PASS"
           DEPLOY_STATUS: "PASS"
         run: |
           pip3 install -U pip setuptools
@@ -44,12 +44,8 @@ jobs:
       - name: Deploy Failure Handler
         if: failure()
         env:
-          MESSAGE_TYPE: "ERROR"
           TITLE: "GitHub Workflow Error"
-          PROJECT_NAME: "PHP-CICD"
-          ISSUE_ID: "5476"
-          BUILD_STATUS: "PASS"
-          TEST_STATUS: "PASS"
+          MESSAGE_TYPE: "ERROR"
           DEPLOY_STATUS: "FAIL"
         run: |
           pip3 install -U pip setuptools

@@ -39,6 +39,7 @@ jobs:
           DEPLOY_STATUS: "PASS"
         run: |
           pip3 install -U pip setuptools
+          pip3 install slackclient
           python3 scripts/slack_chatops_post.py
       - name: Deploy Failure Handler
         if: failure()
@@ -51,5 +52,6 @@ jobs:
           TEST_STATUS: "PASS"
           DEPLOY_STATUS: "FAIL"
         run: |
-                    pip3 install slackclient
+          pip3 install -U pip setuptools
+          pip3 install slackclient
           python3 scripts/slack_chatops_post.py

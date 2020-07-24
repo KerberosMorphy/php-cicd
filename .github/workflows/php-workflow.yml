@@ -83,7 +83,7 @@ jobs:
           encoded_ref=${ref////%2F}
           url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/$encoded_ref/${{github.run_id}}/build/error
           echo $url_call
-          curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "FAIL"}], "issue_id": "${{env.ISSUE_ID}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
+          curl --location --request POST '$url_call' --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "FAIL"}], "issue_id": "${{env.ISSUE_ID}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
 
   php_test:
     name: Tests

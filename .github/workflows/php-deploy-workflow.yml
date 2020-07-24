@@ -16,7 +16,6 @@ on:
 
 env:
   SLACK_CHANNEL: ${{ github.event.inputs.channel }} # Slack Channel name or ID
-  SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }} # Slack API Token
   SLACK_TIMESTAMP: ${{ github.event.inputs.timestamp }}
   PROJECT_NAME: "PHP-CICD"
   ISSUE_ID: "5476"
@@ -34,19 +33,54 @@ jobs:
         if: ((github.event.inputs.is_approved == 1))
         run: |
           echo "Deploy have been approved and will start."
+          curl --location --request POST 'https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/deploy/status' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "status": [
+                    {
+                        "name": "Build",
+                        "status": "PASS"
+                    },
+                    {
+                        "name": "Tests",
+                        "status": "PASS"
+                    },
+                    {
+                        "name": "Deploy",
+                        "status": "PASS"
+                    },
+                ],
+                "issue_id": "${env.ISSUE_ID}",
+                "github_actor": "${env.GITHUB_ACTOR}",
+                "slack_timestamp": "${env.SLACK_TIMESTAMP}",
+                "github_repository": "${env.GITHUB_REPOSITORY}"
+            }'
       - name: Deploy Denied
         if: ((github.event.inputs.is_approved == 0))
         run: |
           echo "Deploy have been denied."
-      - name: Deploy Status Message
-        env:
-          TITLE: "GitHub Deploy Success"
-          MESSAGE_TYPE: "STATUS"
-          DEPLOY_STATUS: "PASS"
-        run: |
-          pip3 install -U pip setuptools
-          pip3 install slackclient
-          python3 scripts/slack_chatops_post.py
+          curl --location --request POST 'https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/deploy/status' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "status": [
+                    {
+                        "name": "Build",
+                        "status": "PASS"
+                    },
+                    {
+                        "name": "Tests",
+                        "status": "PASS"
+                    },
+                    {
+                        "name": "Deploy",
+                        "status": "FAIL"
+                    },
+                ],
+                "issue_id": "${env.ISSUE_ID}",
+                "github_actor": "${env.GITHUB_ACTOR}",
+                "slack_timestamp": "${env.SLACK_TIMESTAMP}",
+                "github_repository": "${env.GITHUB_REPOSITORY}"
+            }'
       - name: Deploy Failure Handler
         if: failure()
         env:
@@ -54,6 +88,25 @@ jobs:
           MESSAGE_TYPE: "ERROR"
           DEPLOY_STATUS: "FAIL"
         run: |
-          pip3 install -U pip setuptools
-          pip3 install slackclient
-          python3 scripts/slack_chatops_post.py
+          curl --location --request POST 'https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/deploy/error' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "status": [
+                    {
+                        "name": "Build",
+                        "status": "PASS"
+                    },
+                    {
+                        "name": "Tests",
+                        "status": "PASS"
+                    },
+                    {
+                        "name": "Deploy",
+                        "status": "FAIL"
+                    },
+                ],
+                "issue_id": "${env.ISSUE_ID}",
+                "github_actor": "${env.GITHUB_ACTOR}",
+                "slack_timestamp": "${env.SLACK_TIMESTAMP}",
+                "github_repository": "${env.GITHUB_REPOSITORY}"
+            }'

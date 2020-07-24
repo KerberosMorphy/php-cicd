@@ -79,7 +79,7 @@ jobs:
       - name: Build Failure Handler
         if: failure()
         run: |
-          encoded_ref=${env.GITHUB_REF////%2F}
+          encoded_ref=${github.ref////%2F}
           url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${encoded_ref}/${{env.GITHUB_RUN_ID}}/build/error
           echo $url_call
           curl --location --request POST $url_call \

@@ -13,7 +13,7 @@ env:
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Replace by ${{ github.token }} for github registry
   PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php # Replace by ${{ github.repository }}/gh-php for github registry
   PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test # Replace by ${{ github.repository }}/gh-php-test for github registry
-  SLACK_CHANNEL: "#test-bot" # Slack Channel name or ID
+  SLACK_CHANNEL: "test-bot" # Slack Channel name or ID
   SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }} # Slack API Token
   PROJECT_NAME: "PHP-CICD"
   ISSUE_ID: "5476"
@@ -80,8 +80,7 @@ jobs:
         if: failure()
         run: |
           ref=${{github.ref}}
-          encoded_ref=${ref////%2F}
-          url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${${{github.ref}}////%2F}/${{github.run_id}}/build/error
+          url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${ref////%2F}/${{github.run_id}}/build/error
           echo $url_call
           curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "FAIL"}], "issue_id": "${{env.ISSUE_ID}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
 

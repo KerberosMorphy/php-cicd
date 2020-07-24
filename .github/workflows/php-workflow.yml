@@ -149,24 +149,24 @@ jobs:
         uses: actions/checkout@v2
       - name: Slack Request
         run: |
-        curl --location --request POST 'https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/deploy/request' \
-          --header 'Content-Type: application/json' \
-          --data-raw '{
-              "status": [
-                  {
-                      "name": "Build",
-                      "status": "PASS"
-                  },
-                  {
-                      "name": "Tests",
-                      "status": "PASS"
-                  },
-              ],
-              "issue_id": "${env.ISSUE_ID}",
-              "workflow": "${env.WORKFLOW}",
-              "github_actor": "${env.GITHUB_ACTOR}",
-              "github_repository": "${env.GITHUB_REPOSITORY}"
-          }'
+          curl --location --request POST 'https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/deploy/request' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "status": [
+                    {
+                        "name": "Build",
+                        "status": "PASS"
+                    },
+                    {
+                        "name": "Tests",
+                        "status": "PASS"
+                    },
+                ],
+                "issue_id": "${env.ISSUE_ID}",
+                "workflow": "${env.WORKFLOW}",
+                "github_actor": "${env.GITHUB_ACTOR}",
+                "github_repository": "${env.GITHUB_REPOSITORY}"
+            }'
       - name: Email Request
         run: echo "Execute Email Deploy Request script"
       - name: Hub Request

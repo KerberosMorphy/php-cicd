@@ -79,22 +79,11 @@ jobs:
       - name: Build Failure Handler
         if: failure()
         run: |
-          encoded_ref=${${{github.ref}}////%2F}
+          ref=${{github.ref}}
+          encoded_ref=${ref////%2F}
           url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${encoded_ref}/${{env.GITHUB_RUN_ID}}/build/error
           echo $url_call
-          curl --location --request POST $url_call \
-            --header 'Content-Type: application/json' \
-            --data-raw '{
-                "status": [
-                    {
-                        "name": "Build",
-                        "status": "FAIL"
-                    },
-                ],
-                "issue_id": "${env.ISSUE_ID}",
-                "github_actor": "${env.GITHUB_ACTOR}",
-                "github_repository": "${env.GITHUB_REPOSITORY}"
-            }'
+          curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "FAIL"}], "issue_id": "${env.ISSUE_ID}", "github_actor": "${env.GITHUB_ACTOR}", "github_repository": "${env.GITHUB_REPOSITORY}"}'
 
   php_test:
     name: Tests

@@ -23,6 +23,7 @@ jobs:
     name: Builds
     runs-on: ubuntu-latest
     steps:
+      - run: exit(1)
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Get file changes
@@ -78,7 +79,9 @@ jobs:
       - name: Build Failure Handler
         if: failure()
         run: |
-          curl --location --request POST 'https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/build/error' \
+          url_call=https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/build/error
+          echo $url_call
+          curl --location --request POST $url_call \
             --header 'Content-Type: application/json' \
             --data-raw '{
                 "status": [

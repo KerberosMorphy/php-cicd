@@ -81,7 +81,6 @@ jobs:
         run: |
           ref=${{github.ref}}
           url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${ref////%2F}/${{github.run_id}}/build/error
-          echo $url_call
           curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "FAIL"}], "issue_id": "${{env.ISSUE_ID}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
 
   php_test:
@@ -108,23 +107,9 @@ jobs:
       - name: Test Failure Handler
         if: failure()
         run: |
-          curl --location --request POST 'https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/tests/error' \
-            --header 'Content-Type: application/json' \
-            --data-raw '{
-                "status": [
-                    {
-                        "name": "Build",
-                        "status": "PASS"
-                    },
-                    {
-                        "name": "Tests",
-                        "status": "FAIL"
-                    },
-                ],
-                "issue_id": "${env.ISSUE_ID}",
-                "github_actor": "${env.GITHUB_ACTOR}",
-                "github_repository": "${env.GITHUB_REPOSITORY}"
-            }'
+          ref=${{github.ref}}
+          url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${ref////%2F}/${{github.run_id}}/tests/error
+          curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "PASS"}, {"name": "Tests", "status": "FAIL"}], "issue_id": "${{env.ISSUE_ID}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
 
   php_deploy_request:
     name: Deploy Request
@@ -141,24 +126,9 @@ jobs:
         uses: actions/checkout@v2
       - name: Slack Request
         run: |
-          curl --location --request POST 'https://slack.toumoro.com/github/${env.SLACK_CHANNEL}/${env.PROJECT_NAME}/${env.GITHUB_REF////%2F}/${env.GITHUB_RUN_ID}/deploy/request' \
-            --header 'Content-Type: application/json' \
-            --data-raw '{
-                "status": [
-                    {
-                        "name": "Build",
-                        "status": "PASS"
-                    },
-                    {
-                        "name": "Tests",
-                        "status": "PASS"
-                    },
-                ],
-                "issue_id": "${env.ISSUE_ID}",
-                "workflow": "${env.WORKFLOW}",
-                "github_actor": "${env.GITHUB_ACTOR}",
-                "github_repository": "${env.GITHUB_REPOSITORY}"
-            }'
+          ref=${{github.ref}}
+          url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${ref////%2F}/${{github.run_id}}/deploy/request
+          curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "PASS"}, {"name": "Tests", "status": "PASS"}], "issue_id": "${{env.ISSUE_ID}}", "workflow": "${{env.WORKFLOW}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
       - name: Email Request
         run: echo "Execute Email Deploy Request script"
       - name: Hub Request

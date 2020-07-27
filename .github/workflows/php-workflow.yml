@@ -14,16 +14,16 @@ env:
   PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php # Replace by ${{ github.repository }}/gh-php for github registry
   PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test # Replace by ${{ github.repository }}/gh-php-test for github registry
   SLACK_CHANNEL: "test-bot" # Slack Channel name or ID
-  SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }} # Slack API Token
   PROJECT_NAME: "PHP-CICD"
   ISSUE_ID: "5476"
+  API_KEY: ${{ secrets.API_KEY }}
+  API_URL: ${{ secrets.API_URL }}
 
 jobs:
   php_build:
     name: Builds
     runs-on: ubuntu-latest
     steps:
-      - run: exit(1)
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Get file changes
@@ -78,10 +78,22 @@ jobs:
           tags: latest
       - name: Build Failure Handler
         if: failure()
-        run: |
-          ref=${{github.ref}}
-          url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${ref////%2F}/${{github.run_id}}/build/error
-          curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "FAIL"}], "issue_id": "${{env.ISSUE_ID}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
+        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+        with:
+          api_url: ${{ env.API_URL }}
+          api_key: ${{ env.API_KEY }}
+          service: github
+          project: ${{ env.PROJECT_NAME }}
+          channel: ${{ env.SLACK_CHANNEL}}
+          ref: ${{ github.ref }}
+          run_id: ${{ github.run_id }}
+          step: Build
+          type: error
+          status: Build:FAIL
+          issue_id: ${{ env.ISSUE_ID }}
+          actor: ${{ github.actor }}
+          repository: ${{ github.repository }}
+          verbose: '2'
 
   php_test:
     name: Tests
@@ -106,29 +118,48 @@ jobs:
         run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
       - name: Test Failure Handler
         if: failure()
-        run: |
-          ref=${{github.ref}}
-          url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${ref////%2F}/${{github.run_id}}/tests/error
-          curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "PASS"}, {"name": "Tests", "status": "FAIL"}], "issue_id": "${{env.ISSUE_ID}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
+        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+        with:
+          api_url: ${{ env.API_URL }}
+          api_key: ${{ env.API_KEY }}
+          service: github
+          project: ${{ env.PROJECT_NAME }}
+          channel: ${{ env.SLACK_CHANNEL}}
+          ref: ${{ github.ref }}
+          run_id: ${{ github.run_id }}
+          step: Test
+          type: error
+          status: Build:PASS;Test:FAIL
+          issue_id: ${{ env.ISSUE_ID }}
+          actor: ${{ github.actor }}
+          repository: ${{ github.repository }}
+          verbose: '2'
 
   php_deploy_request:
     name: Deploy Request
     runs-on: ubuntu-latest
-    env:
-      MESSAGE_TYPE: "REQUEST"
-      TITLE: "GitHub Deploy Request"
-      BUILD_STATUS: "PASS"
-      TEST_STATUS: "PASS"
-      WORKFLOW: "php-deploy-workflow.yml"
     needs: ["php_test"]
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Slack Request
-        run: |
-          ref=${{github.ref}}
-          url_call=https://slack.toumoro.com/github/${{env.SLACK_CHANNEL}}/${{env.PROJECT_NAME}}/${ref////%2F}/${{github.run_id}}/deploy/request
-          curl --location --request POST $url_call --header 'Content-Type: application/json' --data-raw '{"status": [{"name": "Build", "status": "PASS"}, {"name": "Tests", "status": "PASS"}], "issue_id": "${{env.ISSUE_ID}}", "workflow": "${{env.WORKFLOW}}", "github_actor": "${{github.actor}}", "github_repository": "${{github.repository}}"}'
+        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+        with:
+          api_url: ${{ env.API_URL }}
+          api_key: ${{ env.API_KEY }}
+          service: github
+          project: ${{ env.PROJECT_NAME }}
+          channel: ${{ env.SLACK_CHANNEL}}
+          ref: ${{ github.ref }}
+          run_id: ${{ github.run_id }}
+          step: Deploy
+          type: request
+          status: Build:PASS;Test:PASS
+          issue_id: ${{ env.ISSUE_ID }}
+          actor: ${{ github.actor }}
+          repository: ${{ github.repository }}
+          workflow: 'php-deploy-workflow.yml'
+          verbose: '2'
       - name: Email Request
         run: echo "Execute Email Deploy Request script"
       - name: Hub Request

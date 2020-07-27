@@ -13,7 +13,7 @@ env:
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Replace by ${{ github.token }} for github registry
   PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php # Replace by ${{ github.repository }}/gh-php for github registry
   PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test # Replace by ${{ github.repository }}/gh-php-test for github registry
-  SLACK_CHANNEL: "test-bot" # Slack Channel name or ID
+  SLACK_CHANNEL: "ci-cd" # Slack Channel name or ID
   PROJECT_NAME: "PHP-CICD"
   ISSUE_ID: "5476"
   API_KEY: ${{ secrets.API_KEY }}

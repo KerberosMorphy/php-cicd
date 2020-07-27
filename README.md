@@ -102,6 +102,12 @@ env:
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   PHP_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php
   PHP_TEST_IMAGE: ${{ secrets.DOCKER_USERNAME }}/gh-php-test
+  # ENV for slack messaging below
+  SLACK_CHANNEL: "test-bot"
+  PROJECT_NAME: "PHP-CICD"
+  ISSUE_ID: "5476"
+  API_KEY: ${{ secrets.API_KEY }}
+  API_URL: ${{ secrets.API_URL }}
 ```
 
 #### Élément `jobs`
@@ -165,7 +171,6 @@ Parmi les inputs de cette action, j'ai indiqué de consulter la dernière image 
         if: contains(steps.file_changes.outputs.files, 'docker/Dockerfile') || !((steps.is_php_image_exist.outputs.image_exist))
         uses: docker/build-push-action@v1.1.0
         with:
-          name: ${{ env.PHP_IMAGE }}
           username: ${{env.DOCKER_USERNAME}}
           password: ${{env.DOCKER_PASSWORD}}
           registry: ${{env.DOCKER_REGISTRY}}
@@ -185,12 +190,27 @@ Pour l'image servant au test, l'étape est très similaire à celle précédente
 
 Finalement, pour la gestion des erreurs j'ai ajouté l'étape `Build Failure Handler` qui se déclenche uniquement si une étape précédente d'une même job à échoué. Il est aussi possible de cibler l'échec d'une étape précisé, nous pourrions donc traiter l'échec du build de base différemment de l'échec du build de test.
 
+L'image docker utilisé à été créé spécifiquement pour Toumoro et permet d'envoyer des message interactif dans Slack. Voir [Toumoro Slack Messaging](https://github.com/tm-bverret/toumoro-slack-messaging/blob/master/README.md) pour plus d'information. Cette image devrait pouvoir être utilisable avec GitLab et Bitbucket.
+
 ```yml
       - name: Build Failure Handler
         if: failure()
-        run: |
-          chmod +x ./scripts/on_build_failure.sh
-          sh ./scripts/on_build_failure.sh
+        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+        with:
+          api_url: ${{ env.API_URL }}
+          api_key: ${{ env.API_KEY }}
+          service: github
+          project: ${{ env.PROJECT_NAME }}
+          channel: ${{ env.SLACK_CHANNEL}}
+          ref: ${{ github.ref }}
+          run_id: ${{ github.run_id }}
+          step: Build
+          type: error
+          status: Build:FAIL
+          issue_id: ${{ env.ISSUE_ID }}
+          actor: ${{ github.actor }}
+          repository: ${{ github.repository }}
+          verbose: '2'
 ```
 
 _**Point à noter**: Une étape ne peut pas utiliser la clef `uses` et `run` en même temps. Soit nous utilisons une action ou conteneur via `uses`, soit nous exécutons du script via `run`._
@@ -208,13 +228,12 @@ Malheureusement, le registre de GitHub nécessitant obligatoirement une authenti
     name: Tests
     runs-on: ubuntu-latest
     needs: ["php_build"]
-    container:
+    container: docker://docker.io/kerberosmorphy/gh-php-test:latest
       # Variable not working in container image name
       # https://github.community/t/how-to-use-env-with-container-image/17252
       # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
       # Github PKG Docker not working in container section
       # image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
-      image: docker://docker.io/kerberosmorphy/gh-php-test:latest
 ```
 
 Je n'aborderai pas les étapes considérant qu'ils sont fortement similaires au cas d'exemples de Bitbucket et GitLab.
@@ -229,22 +248,37 @@ Il s'agit donc d'un job qui dépend des tests (`needs: ["php_test"]`) et auquel 
   php_deploy_request:
     name: Deploy Request
     runs-on: ubuntu-latest
-    env:
-      DISPATCH_URL: https://api.github.com/repos/${{ github.repository }}/actions/workflows/php-deploy-workflow.yml/dispatches
-      BODY: '{"ref":"master", "inputs": {"is_approved":"0"}}'
     needs: ["php_test"]
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Slack Request
-        run: echo "Execute Slack Deploy Request script"
+        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+        with:
+          api_url: ${{ env.API_URL }}
+          api_key: ${{ env.API_KEY }}
+          service: github
+          project: ${{ env.PROJECT_NAME }}
+          channel: ${{ env.SLACK_CHANNEL}}
+          ref: ${{ github.ref }}
+          run_id: ${{ github.run_id }}
+          step: Deploy
+          type: request
+          status: Build:PASS;Test:PASS
+          issue_id: ${{ env.ISSUE_ID }}
+          actor: ${{ github.actor }}
+          repository: ${{ github.repository }}
+          workflow: 'php-deploy-workflow.yml'
+          verbose: '2'
       - name: Email Request
         run: echo "Execute Email Deploy Request script"
       - name: Hub Request
         run: echo "Execute Hub Deploy Request script"
 ```
 
-Concernant les notifications interactives **Slack**, ça doit obligatoirement passé par une application **Slack** créée et qui doit posséder un seule URL de réponse auquel sera retourné la réponse de l'interaction. L'idéal pour ce cas d'utilisation serait d'avoir une fonction **Lambda@Edge** ou un **API Gateway** pour gérer les notifications et facilement intégrer diverses plateformes telles que **Courriel**, **Microsoft Teams**, **Slack**, **Redmine**, etc.
+Concernant les notifications interactives **Slack**, ça doit obligatoirement passé par une application **Slack** créée et qui doit posséder un seule URL de réponse auquel sera retourné la réponse de l'interaction. L'idéal pour ce cas d'utilisation serait d'avoir un **API Gateway** pour gérer les notifications et facilement intégrer diverses plateformes telles que **Courriel**, **Microsoft Teams**, **Slack**, **Redmine**, etc.
+
+Un Backend Serverless via API Gateway a été créé et la communication est possible via `kerberosmorphy/toumoro-slack-messaging`.
 
 [↑ Table des matières ↑](##sections)
 
@@ -256,7 +290,7 @@ Dû au problème expliqué à la job [Deploy Request](#####deploy-request), j'ai
 
 Nous utilisons donc l'événement `workflow_dispatch` qui permet un déclenchement manuel, ce *trigger* offrira aussi une interface graphique dans **GitHub** pour inclure des paramètres. Ces mêmes paramètres peuvent aussi être intégrés pour un appel via l'**API** de **GitHub**.
 
-J'ai choisi de créer le paramètre `is_approved` pour avoir un cas d'utilisation différent si le déploiement est accepté ou non. La valeur `0` représente `true` et toutes autres valeurs sera interprété comme `false`.
+J'ai choisi de créer le paramètre `is_approved` pour avoir un cas d'utilisation différent si le déploiement est accepté ou non. La valeur `0` représente `true` et toutes autres valeurs sera interprété comme `false`. Les paramètres `channel` et `timestamp` sont utilisé pour envoyer des messages sur Slack concernant l'état du workflow.
 
 ```yml
 on:
@@ -266,6 +300,12 @@ on:
         description: 'Would you start the deployment?'
         required: true
         default: '0'
+      timestamp:
+        description: 'Slack message timestamp'
+        required: false
+      channel:
+        description: 'Slack message channel'
+        required: false
 ```
 
 #### Élément deploy `jobs`
@@ -275,17 +315,58 @@ Pour la *job* `Deploy`, il s'agit principalement de deux cas d'utilisation, soit
 ```yml
       - name: Deploy Approved
         if: ((github.event.inputs.is_approved == 1))
-        run: |
-          echo "Deploy have been approved and will start."
+        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+        with:
+          api_url: ${{ env.API_URL }}
+          api_key: ${{ env.API_KEY }}
+          service: github
+          project: ${{ env.PROJECT_NAME }}
+          channel: ${{ env.SLACK_CHANNEL}}
+          ref: ${{ github.ref }}
+          run_id: ${{ github.run_id }}
+          step: Deploy
+          type: status
+          status: Build:FAIL;Test:PASS;Deploy:PASS
+          issue_id: ${{ env.ISSUE_ID }}
+          actor: ${{ github.actor }}
+          repository: ${{ github.repository }}
+          verbose: '2'
       - name: Deploy Denied
         if: ((github.event.inputs.is_approved == 0))
-        run: |
-          echo "Deploy have been denied."
+        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+        with:
+          api_url: ${{ env.API_URL }}
+          api_key: ${{ env.API_KEY }}
+          service: github
+          project: ${{ env.PROJECT_NAME }}
+          channel: ${{ env.SLACK_CHANNEL}}
+          ref: ${{ github.ref }}
+          run_id: ${{ github.run_id }}
+          step: Deploy
+          type: status
+          status: Build:FAIL;Test:PASS;Deploy:FAIL
+          issue_id: ${{ env.ISSUE_ID }}
+          actor: ${{ github.actor }}
+          repository: ${{ github.repository }}
+          verbose: '2'
       - name: Deploy Failure Handler
         if: failure()
-        run: |
-          chmod +x ./scripts/on_deploy_failure.sh
-          sh ./scripts/on_deploy_failure.sh
+        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+        with:
+          api_url: ${{ env.API_URL }}
+          api_key: ${{ env.API_KEY }}
+          service: github
+          project: ${{ env.PROJECT_NAME }}
+          channel: ${{ env.SLACK_CHANNEL}}
+          ref: ${{ github.ref }}
+          run_id: ${{ github.run_id }}
+          step: Deploy
+          type: error
+          status: Build:FAIL;Test:PASS;Deploy:FAIL
+          issue_id: ${{ env.ISSUE_ID }}
+          actor: ${{ github.actor }}
+          repository: ${{ github.repository }}
+          verbose: '2'
 ```
 
 [↑ Table des matières ↑](##sections)
@@ -315,7 +396,6 @@ Nous avons les points importants suivant:
 #### Élément `inputs`
 
 Définis les paramètres d'entrée qui seront utilisés dans une *job* avec la clef `with`.
-
 
 ```yml
 inputs:

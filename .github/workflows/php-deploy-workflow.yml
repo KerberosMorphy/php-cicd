@@ -42,7 +42,7 @@ jobs:
           run_id: ${{ github.run_id }}
           step: Deploy
           type: status
-          status: Build:FAIL;Test:PASS;Deploy:PASS
+          status: Build:PASS;Test:PASS;Deploy:PASS
           issue_id: ${{ env.ISSUE_ID }}
           actor: ${{ github.actor }}
           repository: ${{ github.repository }}
@@ -60,7 +60,7 @@ jobs:
           run_id: ${{ github.run_id }}
           step: Deploy
           type: status
-          status: Build:FAIL;Test:PASS;Deploy:FAIL
+          status: Build:PASS;Test:PASS;Deploy:FAIL
           issue_id: ${{ env.ISSUE_ID }}
           actor: ${{ github.actor }}
           repository: ${{ github.repository }}
@@ -78,7 +78,7 @@ jobs:
           run_id: ${{ github.run_id }}
           step: Deploy
           type: error
-          status: Build:FAIL;Test:PASS;Deploy:FAIL
+          status: Build:PASS;Test:PASS;Deploy:FAIL
           issue_id: ${{ env.ISSUE_ID }}
           actor: ${{ github.actor }}
           repository: ${{ github.repository }}

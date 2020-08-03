@@ -20,147 +20,160 @@ env:
   API_URL: ${{ secrets.API_URL }}
 
 jobs:
-  php_build:
-    name: Builds
+  ssh_job:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-      - name: Get file changes
-        id: file_changes
-        uses: trilom/file-changes-action@v1.2.4
-        with:
-          githubToken: ${{ github.token }}
-          output: ";"
-      - name: Check if PHP image exist in registry
-        id: is_php_image_exist
-        uses: tm-bverret/docker-exist-action@v1.1.2
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          image: ${{ env.PHP_IMAGE }}:latest
-      - name: Publish PHP Image
-        # In this if, remove the or if use github docker registry
-        if: contains(steps.file_changes.outputs.files, 'docker/Dockerfile') || !((steps.is_php_image_exist.outputs.image_exist))
-        uses: docker/build-push-action@v1.1.0
-        with:
-          name: ${{ env.PHP_IMAGE }}
-          username: ${{env.DOCKER_USERNAME}}
-          password: ${{env.DOCKER_PASSWORD}}
-          registry: ${{env.DOCKER_REGISTRY}}
-          cache_froms: ${{ env.PHP_IMAGE }}:latest
-          dockerfile: docker/Dockerfile
-          repository: ${{ env.PHP_IMAGE }}
-          tag_with_sha: true
-          tags: latest
-      - name: Check if PHP Test image exist in registry
-        id: is_php_test_image_exist
-        uses: tm-bverret/docker-exist-action@v1.1.2
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          image: ${{ env.PHP_TEST_IMAGE }}:latest
-      - name: Publish PHP Test Image
-        if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !((steps.is_php_test_image_exist.outputs.image_exist)) || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
-        uses: docker/build-push-action@v1.1.0
-        with:
-          name: ${{ env.PHP_TEST_IMAGE }}
-          username: ${{env.DOCKER_USERNAME}}
-          password: ${{env.DOCKER_PASSWORD}}
-          registry: ${{env.DOCKER_REGISTRY}}
-          cache_froms: ${{ env.PHP_IMAGE }}:latest,${{ env.PHP_TEST_IMAGE }}:latest
-          dockerfile: docker/Test.Dockerfile
-          repository: ${{ env.PHP_TEST_IMAGE }}
-          build_args: base_image=${{env.DOCKER_REGISTRY}}/${{env.PHP_IMAGE}}:latest
-          tag_with_sha: true
-          tags: latest
-      - name: Build Failure Handler
-        if: failure()
-        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
-        with:
-          api_url: ${{ env.API_URL }}
-          api_key: ${{ env.API_KEY }}
-          service: github
-          project: ${{ env.PROJECT_NAME }}
-          channel: ${{ env.SLACK_CHANNEL}}
-          ref: ${{ github.ref }}
-          run_id: ${{ github.run_id }}
-          step: Build
-          type: error
-          status: Build:FAIL
-          issue_id: ${{ env.ISSUE_ID }}
-          actor: ${{ github.actor }}
-          repository: ${{ github.repository }}
-          verbose: '2'
+      - uses: docker://toumoro/ssh-commands-action:latest
+        env:
+          INPUT_HOST: ${{ secrets.HOST }}
+          INPUT_USERNAME: tm_bverret
+          INPUT_PORT: ${{ secrets.PORT }}
+          INPUT_KEY: $(umask  077 ; echo ${{ secrets KEY }} | base64 --decode)
+          INPUT_SCRIPT: |
+            echo \$(ls)
+            ls \\
+              -lah
+#   php_build:
+#     name: Builds
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Repo
+#         uses: actions/checkout@v2
+#       - name: Get file changes
+#         id: file_changes
+#         uses: trilom/file-changes-action@v1.2.4
+#         with:
+#           githubToken: ${{ github.token }}
+#           output: ";"
+#       - name: Check if PHP image exist in registry
+#         id: is_php_image_exist
+#         uses: tm-bverret/docker-exist-action@v1.1.2
+#         with:
+#           registry: docker.io
+#           username: ${{ secrets.DOCKER_USERNAME }}
+#           password: ${{ secrets.DOCKER_PASSWORD }}
+#           image: ${{ env.PHP_IMAGE }}:latest
+#       - name: Publish PHP Image
+#         # In this if, remove the or if use github docker registry
+#         if: contains(steps.file_changes.outputs.files, 'docker/Dockerfile') || !((steps.is_php_image_exist.outputs.image_exist))
+#         uses: docker/build-push-action@v1.1.0
+#         with:
+#           name: ${{ env.PHP_IMAGE }}
+#           username: ${{env.DOCKER_USERNAME}}
+#           password: ${{env.DOCKER_PASSWORD}}
+#           registry: ${{env.DOCKER_REGISTRY}}
+#           cache_froms: ${{ env.PHP_IMAGE }}:latest
+#           dockerfile: docker/Dockerfile
+#           repository: ${{ env.PHP_IMAGE }}
+#           tag_with_sha: true
+#           tags: latest
+#       - name: Check if PHP Test image exist in registry
+#         id: is_php_test_image_exist
+#         uses: tm-bverret/docker-exist-action@v1.1.2
+#         with:
+#           registry: docker.io
+#           username: ${{ secrets.DOCKER_USERNAME }}
+#           password: ${{ secrets.DOCKER_PASSWORD }}
+#           image: ${{ env.PHP_TEST_IMAGE }}:latest
+#       - name: Publish PHP Test Image
+#         if: contains(steps.get_file_changes.outputs.files, 'docker/Test.Dockerfile') || !((steps.is_php_test_image_exist.outputs.image_exist)) || contains(steps.get_file_changes.outputs.files, 'docker/Dockerfile')
+#         uses: docker/build-push-action@v1.1.0
+#         with:
+#           name: ${{ env.PHP_TEST_IMAGE }}
+#           username: ${{env.DOCKER_USERNAME}}
+#           password: ${{env.DOCKER_PASSWORD}}
+#           registry: ${{env.DOCKER_REGISTRY}}
+#           cache_froms: ${{ env.PHP_IMAGE }}:latest,${{ env.PHP_TEST_IMAGE }}:latest
+#           dockerfile: docker/Test.Dockerfile
+#           repository: ${{ env.PHP_TEST_IMAGE }}
+#           build_args: base_image=${{env.DOCKER_REGISTRY}}/${{env.PHP_IMAGE}}:latest
+#           tag_with_sha: true
+#           tags: latest
+#       - name: Build Failure Handler
+#         if: failure()
+#         uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+#         with:
+#           api_url: ${{ env.API_URL }}
+#           api_key: ${{ env.API_KEY }}
+#           service: github
+#           project: ${{ env.PROJECT_NAME }}
+#           channel: ${{ env.SLACK_CHANNEL}}
+#           ref: ${{ github.ref }}
+#           run_id: ${{ github.run_id }}
+#           step: Build
+#           type: error
+#           status: Build:FAIL
+#           issue_id: ${{ env.ISSUE_ID }}
+#           actor: ${{ github.actor }}
+#           repository: ${{ github.repository }}
+#           verbose: '2'
 
-  php_test:
-    name: Tests
-    runs-on: ubuntu-latest
-    needs: ["php_build"]
-    container: docker://docker.io/kerberosmorphy/gh-php-test:latest
-      # Variable not working in container image name
-      # https://github.community/t/how-to-use-env-with-container-image/17252
-      # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
-      # Github PKG Docker not working in container section
-      # image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-      - name: Unit Test
-        run: |
-          phpunit --bootstrap ./src/Calculator.php ./tests/CalculatorTest.php
-          phpunit --bootstrap ./src/Email.php ./tests/EmailTest.php
-      - name: Integration Test
-        run: phpunit --bootstrap ./src/Music.php ./tests/MusicIntegrationTest.php
-      - name: Functional Test
-        run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
-      - name: Test Failure Handler
-        if: failure()
-        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
-        with:
-          api_url: ${{ env.API_URL }}
-          api_key: ${{ env.API_KEY }}
-          service: github
-          project: ${{ env.PROJECT_NAME }}
-          channel: ${{ env.SLACK_CHANNEL}}
-          ref: ${{ github.ref }}
-          run_id: ${{ github.run_id }}
-          step: Test
-          type: error
-          status: Build:PASS;Test:FAIL
-          issue_id: ${{ env.ISSUE_ID }}
-          actor: ${{ github.actor }}
-          repository: ${{ github.repository }}
-          verbose: '2'
+#   php_test:
+#     name: Tests
+#     runs-on: ubuntu-latest
+#     needs: ["php_build"]
+#     container: docker://docker.io/kerberosmorphy/gh-php-test:latest
+#       # Variable not working in container image name
+#       # https://github.community/t/how-to-use-env-with-container-image/17252
+#       # image: ${{ env.DOCKER_REGISTRY }}/${{ env.PHP_TEST_IMAGE }}:latest
+#       # Github PKG Docker not working in container section
+#       # image: docker://docker.pkg.github.com/tm-bverret/php_cicd/gh-php-test:latest
+#     steps:
+#       - name: Checkout Repo
+#         uses: actions/checkout@v2
+#       - name: Unit Test
+#         run: |
+#           phpunit --bootstrap ./src/Calculator.php ./tests/CalculatorTest.php
+#           phpunit --bootstrap ./src/Email.php ./tests/EmailTest.php
+#       - name: Integration Test
+#         run: phpunit --bootstrap ./src/Music.php ./tests/MusicIntegrationTest.php
+#       - name: Functional Test
+#         run: phpunit --bootstrap ./src/Music.php ./tests/MusicFunctionalTest.php
+#       - name: Test Failure Handler
+#         if: failure()
+#         uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+#         with:
+#           api_url: ${{ env.API_URL }}
+#           api_key: ${{ env.API_KEY }}
+#           service: github
+#           project: ${{ env.PROJECT_NAME }}
+#           channel: ${{ env.SLACK_CHANNEL}}
+#           ref: ${{ github.ref }}
+#           run_id: ${{ github.run_id }}
+#           step: Test
+#           type: error
+#           status: Build:PASS;Test:FAIL
+#           issue_id: ${{ env.ISSUE_ID }}
+#           actor: ${{ github.actor }}
+#           repository: ${{ github.repository }}
+#           verbose: '2'
 
-  php_deploy_request:
-    name: Deploy Request
-    runs-on: ubuntu-latest
-    needs: ["php_test"]
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-      - name: Slack Request
-        uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
-        with:
-          api_url: ${{ env.API_URL }}
-          api_key: ${{ env.API_KEY }}
-          service: github
-          project: ${{ env.PROJECT_NAME }}
-          channel: ${{ env.SLACK_CHANNEL}}
-          ref: ${{ github.ref }}
-          run_id: ${{ github.run_id }}
-          step: Deploy
-          type: request
-          status: Build:PASS;Test:PASS
-          issue_id: ${{ env.ISSUE_ID }}
-          actor: ${{ github.actor }}
-          repository: ${{ github.repository }}
-          workflow: 'php-deploy-workflow.yml'
-          verbose: '2'
-      - name: Email Request
-        run: echo "Execute Email Deploy Request script"
-      - name: Hub Request
-        run: echo "Execute Hub Deploy Request script"
+#   php_deploy_request:
+#     name: Deploy Request
+#     runs-on: ubuntu-latest
+#     needs: ["php_test"]
+#     steps:
+#       - name: Checkout Repo
+#         uses: actions/checkout@v2
+#       - name: Slack Request
+#         uses: docker://kerberosmorphy/toumoro-slack-messaging:latest
+#         with:
+#           api_url: ${{ env.API_URL }}
+#           api_key: ${{ env.API_KEY }}
+#           service: github
+#           project: ${{ env.PROJECT_NAME }}
+#           channel: ${{ env.SLACK_CHANNEL}}
+#           ref: ${{ github.ref }}
+#           run_id: ${{ github.run_id }}
+#           step: Deploy
+#           type: request
+#           status: Build:PASS;Test:PASS
+#           issue_id: ${{ env.ISSUE_ID }}
+#           actor: ${{ github.actor }}
+#           repository: ${{ github.repository }}
+#           workflow: 'php-deploy-workflow.yml'
+#           verbose: '2'
+#       - name: Email Request
+#         run: echo "Execute Email Deploy Request script"
+#       - name: Hub Request
+#         run: echo "Execute Hub Deploy Request script"

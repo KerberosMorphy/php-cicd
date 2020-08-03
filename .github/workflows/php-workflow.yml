@@ -28,7 +28,7 @@ jobs:
           INPUT_HOST: ${{ secrets.HOST }}
           INPUT_USERNAME: tm_bverret
           INPUT_PORT: ${{ secrets.PORT }}
-          INPUT_KEY: $(umask  077 ; echo ${{ secrets KEY }} | base64 --decode)
+          INPUT_KEY: ${{ secrets KEY }}
           INPUT_SCRIPT: |
             echo \$(ls)
             ls \\

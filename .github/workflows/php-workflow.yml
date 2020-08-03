@@ -24,13 +24,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/ssh-action@master
-        env:
-          INPUT_HOST: ${{ secrets.HOST }}
-          INPUT_USERNAME: tm_bverret
-          INPUT_PORT: ${{ secrets.PORT }}
-          INPUT_PASSPHRASE: ${{ secrets.PASSPHRASE }}
-          INPUT_KEY: ${{ secrets.KEY }}
-          INPUT_SCRIPT: |
+        with:
+          host: ${{ secrets.HOST }}
+          username: tm_bverret
+          port: ${{ secrets.PORT }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          key: ${{ secrets.KEY }}
+          script: |
             ls \
               -lah
 #   php_build:

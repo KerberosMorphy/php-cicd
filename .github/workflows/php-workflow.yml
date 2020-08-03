@@ -28,6 +28,7 @@ jobs:
           INPUT_HOST: ${{ secrets.HOST }}
           INPUT_USERNAME: tm_bverret
           INPUT_PORT: ${{ secrets.PORT }}
+          INPUT_PASSPHRASE: ${{ secrets.PASSPHRASE }}
           INPUT_KEY: ${{ secrets.KEY }}
           INPUT_SCRIPT: |
             echo \$(ls)
